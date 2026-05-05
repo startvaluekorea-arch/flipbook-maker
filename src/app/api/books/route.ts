@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import { supabase } from '@/lib/supabase';
 
 interface BookSummary {
   bookId: string;
@@ -12,41 +11,20 @@ interface BookSummary {
 
 export async function GET() {
   try {
-    const booksDir = path.join(process.cwd(), 'data', 'books');
+    const { data, error } = await supabase
+      .from('books')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-    if (!fs.existsSync(booksDir)) {
-      return NextResponse.json([]);
-    }
+    if (error) throw error;
 
-    const dirs = fs.readdirSync(booksDir).filter((d) =>
-      fs.statSync(path.join(booksDir, d)).isDirectory()
-    );
-
-    const books: BookSummary[] = [];
-
-    for (const dir of dirs) {
-      const metaPath = path.join(booksDir, dir, 'metadata.json');
-      if (!fs.existsSync(metaPath)) continue;
-
-      try {
-        const meta = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
-        // Get creation time from directory stat if createdAt not in metadata
-        const stat = fs.statSync(metaPath);
-
-        books.push({
-          bookId: dir,
-          originalFileName: meta.originalFileName || dir,
-          totalPages: meta.totalPages || 0,
-          createdAt: meta.createdAt || stat.birthtime.toISOString(),
-          coverImage: `/api/images/${dir}/page_1.webp`,
-        });
-      } catch {
-        // Skip corrupted metadata
-      }
-    }
-
-    // Sort by newest first
-    books.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const books: BookSummary[] = data.map((book) => ({
+      bookId: book.book_id,
+      originalFileName: book.name,
+      totalPages: book.total_pages,
+      createdAt: book.created_at,
+      coverImage: `/api/images/${book.book_id}/page_1.webp`, // Keep the proxy path or use direct URL
+    }));
 
     return NextResponse.json(books);
   } catch (error) {
@@ -54,7 +32,6 @@ export async function GET() {
     return NextResponse.json({ error: 'Failed to list books' }, { status: 500 });
   }
 }
-
 
 export async function POST(request: Request) {
   try {
@@ -68,23 +45,25 @@ export async function POST(request: Request) {
     const metadata = JSON.parse(metadataString);
     const bookId = metadata.bookId;
 
-    // MVP: Save to local data directory (in Docker container this maps to /app/data)
-    const baseDir = path.join(process.cwd(), 'data', 'books', bookId);
-    const imagesDir = path.join(baseDir, 'images');
-
-    // Create directories if they don't exist
-    if (!fs.existsSync(imagesDir)) {
-      fs.mkdirSync(imagesDir, { recursive: true });
-    }
-
-    // Save each image
+    // 1. Upload images to Supabase Storage
     for (const [key, value] of formData.entries()) {
       if (key.startsWith('page_') && value instanceof Blob) {
-        const buffer = Buffer.from(await value.arrayBuffer());
-        const filePath = path.join(imagesDir, `${key}.webp`);
-        fs.writeFileSync(filePath, buffer);
+        const buffer = await value.arrayBuffer();
+        const filePath = `${bookId}/images/${key}.webp`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('flipbooks')
+          .upload(filePath, buffer, {
+            contentType: 'image/webp',
+            upsert: true
+          });
 
-        // Update metadata with the API path to the image
+        if (uploadError) {
+          console.error(`Error uploading ${key}:`, uploadError);
+          continue;
+        }
+
+        // Update metadata with the API path (proxying through our redirecting API)
         const pageIndex = parseInt(key.split('_')[1]) - 1;
         if (metadata.pages[pageIndex]) {
           metadata.pages[pageIndex].imagePath = `/api/images/${bookId}/${key}.webp`;
@@ -92,11 +71,17 @@ export async function POST(request: Request) {
       }
     }
 
-    // Save metadata.json
-    fs.writeFileSync(
-      path.join(baseDir, 'metadata.json'),
-      JSON.stringify(metadata, null, 2)
-    );
+    // 2. Save metadata to Supabase Database
+    const { error: dbError } = await supabase
+      .from('books')
+      .insert({
+        book_id: bookId,
+        name: metadata.originalFileName || bookId,
+        total_pages: metadata.totalPages || 0,
+        metadata: metadata
+      });
+
+    if (dbError) throw dbError;
 
     return NextResponse.json({ success: true, bookId });
   } catch (error) {

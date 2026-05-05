@@ -1,21 +1,23 @@
-import fs from 'fs';
-import path from 'path';
 import { notFound } from 'next/navigation';
 import FlipBookViewer from '@/components/FlipBookViewer';
 import Image from 'next/image';
+import { supabase } from '@/lib/supabase';
 
 export default async function ViewerPage({ params }: { params: Promise<{ bookId: string }> }) {
   const { bookId } = await params;
   
-  // Read metadata from local storage
-  const metadataPath = path.join(process.cwd(), 'data', 'books', bookId, 'metadata.json');
+  // 1. Fetch metadata from Supabase Database
+  const { data, error } = await supabase
+    .from('books')
+    .select('metadata')
+    .eq('book_id', bookId)
+    .single();
   
-  if (!fs.existsSync(metadataPath)) {
+  if (error || !data) {
     notFound();
   }
 
-  const metadataContent = fs.readFileSync(metadataPath, 'utf8');
-  const metadata = JSON.parse(metadataContent);
+  const metadata = data.metadata;
 
   return (
     <main className="min-h-screen flex flex-col relative isolate">

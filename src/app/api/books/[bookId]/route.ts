@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import fs from 'fs';
-import path from 'path';
+import { supabase } from '@/lib/supabase';
 
 export async function PATCH(
   request: Request,
@@ -14,16 +13,30 @@ export async function PATCH(
       return NextResponse.json({ error: 'Book ID and title are required' }, { status: 400 });
     }
 
-    const metadataPath = path.join(process.cwd(), 'data', 'books', bookId, 'metadata.json');
+    // 1. Fetch current metadata
+    const { data, error: fetchError } = await supabase
+      .from('books')
+      .select('metadata')
+      .eq('book_id', bookId)
+      .single();
 
-    if (!fs.existsSync(metadataPath)) {
+    if (fetchError || !data) {
       return NextResponse.json({ error: 'Book not found' }, { status: 404 });
     }
 
-    const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf-8'));
-    metadata.originalFileName = title; // Update the title
+    const metadata = data.metadata;
+    metadata.originalFileName = title;
 
-    fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2));
+    // 2. Update metadata and name
+    const { error: updateError } = await supabase
+      .from('books')
+      .update({ 
+        name: title,
+        metadata: metadata 
+      })
+      .eq('book_id', bookId);
+
+    if (updateError) throw updateError;
 
     return NextResponse.json({ success: true, title });
   } catch (error) {
@@ -43,14 +56,28 @@ export async function DELETE(
       return NextResponse.json({ error: 'Book ID is required' }, { status: 400 });
     }
 
-    const bookDir = path.join(process.cwd(), 'data', 'books', bookId);
+    // 1. Delete from Storage (files under bookId/)
+    // List files first
+    const { data: files, error: listError } = await supabase.storage
+      .from('flipbooks')
+      .list(`${bookId}/images`);
 
-    if (!fs.existsSync(bookDir)) {
-      return NextResponse.json({ error: 'Book not found' }, { status: 404 });
+    if (!listError && files) {
+      const filesToDelete = files.map(f => `${bookId}/images/${f.name}`);
+      if (filesToDelete.length > 0) {
+        await supabase.storage
+          .from('flipbooks')
+          .remove(filesToDelete);
+      }
     }
 
-    // Delete the entire book directory recursively
-    fs.rmSync(bookDir, { recursive: true, force: true });
+    // 2. Delete from Database
+    const { error: deleteError } = await supabase
+      .from('books')
+      .delete()
+      .eq('book_id', bookId);
+
+    if (deleteError) throw deleteError;
 
     return NextResponse.json({ success: true });
   } catch (error) {
