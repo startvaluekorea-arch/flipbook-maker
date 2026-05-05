@@ -260,7 +260,7 @@ export default function GalleryPage() {
                     </div>
 
                     {/* Info */}
-                    <div className="p-4 pr-12">
+                    <div className="pt-3 pb-5 px-4 pr-12">
                       {editingId === book.bookId ? (
                         <div className="flex items-center gap-1 mb-2" onClick={(e) => e.stopPropagation()}>
                           <input
@@ -305,7 +305,7 @@ export default function GalleryPage() {
                   </Link>
 
                   {/* Actions (Floating) */}
-                  <div className="absolute bottom-3 right-2 flex items-center gap-0.5">
+                  <div className="absolute bottom-2 right-2 flex items-center gap-0.5">
                     {editingId !== book.bookId && (
                       <button
                         onClick={(e) => startEditing(e, book.bookId, book.originalFileName)}
