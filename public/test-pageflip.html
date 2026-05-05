@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.min.js"></script>
+</head>
+<body>
+  <div id="book" style="width: 400px; height: 300px; background: #eee;">
+    <div class="page" style="background: red;">Page 0</div>
+    <div class="page" style="background: blue;">Page 1</div>
+    <div class="page" style="background: green;">Page 2</div>
+    <div class="page" style="background: yellow;">Page 3</div>
+    <div class="page" style="background: orange;">Page 4</div>
+    <div class="page" style="background: purple;">Page 5</div>
+    <div class="page" style="background: cyan;">Page 6</div>
+    <div class="page" style="background: pink;">Page 7</div>
+  </div>
+  <script>
+    const flipBook = new St.PageFlip(document.getElementById('book'), {
+        width: 400, height: 300, showCover: true
+    });
+    flipBook.loadFromHTML(document.querySelectorAll('.page'));
+    
+    window.testTurnToPage = function(index) {
+        flipBook.turnToPage(index);
+        console.log("Called turnToPage(" + index + "). Current page index is:", flipBook.getCurrentPageIndex());
+    };
+  </script>
+</body>
+</html>
