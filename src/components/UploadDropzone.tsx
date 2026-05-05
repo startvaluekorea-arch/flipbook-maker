@@ -34,7 +34,7 @@ export default function UploadDropzone() {
     setIsDragging(false);
   }, []);
 
-  const processPDF = async (file: File) => {
+  const processPDF = useCallback(async (file: File) => {
     setIsUploading(true);
     setStatus('PDF 파싱 준비 중...');
     setProgress(0);
@@ -83,7 +83,7 @@ export default function UploadDropzone() {
                   const pageIndex = await pdf.getPageIndex(explicitDest[0]);
                   destPage = pageIndex; // 0-based physical page index
                 }
-              } catch (e) {
+              } catch {
                 console.warn('Failed to resolve internal destination', a.dest);
               }
             }
@@ -127,7 +127,7 @@ export default function UploadDropzone() {
       let pageLabels: string[] | null = null;
       try {
         pageLabels = await pdf.getPageLabels();
-      } catch (e) {
+      } catch {
         console.warn('Failed to get page labels');
       }
 
@@ -152,7 +152,8 @@ export default function UploadDropzone() {
       });
 
       if (!response.ok) {
-        throw new Error('Upload failed');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Upload failed');
       }
 
       setProgress(100);
@@ -164,10 +165,11 @@ export default function UploadDropzone() {
 
     } catch (error) {
       console.error(error);
-      setStatus('오류가 발생했습니다. 다시 시도해주세요.');
+      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
+      setStatus(`오류: ${errorMessage}`);
       setIsUploading(false);
     }
-  };
+  }, [router]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -178,7 +180,7 @@ export default function UploadDropzone() {
     } else {
       alert('PDF 파일만 업로드 가능합니다.');
     }
-  }, []);
+  }, [processPDF]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

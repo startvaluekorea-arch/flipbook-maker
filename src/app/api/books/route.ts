@@ -18,12 +18,12 @@ export async function GET() {
 
     if (error) throw error;
 
-    const books: BookSummary[] = data.map((book) => ({
+    const books: BookSummary[] = (data || []).map((book: { book_id: string; name: string; total_pages: number; created_at: string }) => ({
       bookId: book.book_id,
       originalFileName: book.name,
       totalPages: book.total_pages,
       createdAt: book.created_at,
-      coverImage: `/api/images/${book.book_id}/page_1.webp`, // Keep the proxy path or use direct URL
+      coverImage: `/api/images/${book.book_id}/page_1.webp`,
     }));
 
     return NextResponse.json(books);
@@ -45,33 +45,41 @@ export async function POST(request: Request) {
     const metadata = JSON.parse(metadataString);
     const bookId = metadata.bookId;
 
-    // 1. Upload images to Supabase Storage
-    for (const [key, value] of formData.entries()) {
+    // 1. Prepare upload tasks
+    const uploadTasks: Promise<void>[] = [];
+    const entries = Array.from(formData.entries());
+
+    for (const [key, value] of entries) {
       if (key.startsWith('page_') && value instanceof Blob) {
-        const buffer = await value.arrayBuffer();
-        const filePath = `${bookId}/images/${key}.webp`;
-        
-        const { error: uploadError } = await supabase.storage
-          .from('flipbooks')
-          .upload(filePath, buffer, {
-            contentType: 'image/webp',
-            upsert: true
-          });
+        const uploadTask = (async () => {
+          const buffer = await value.arrayBuffer();
+          const filePath = `${bookId}/images/${key}.webp`;
+          
+          const { error: uploadError } = await supabase.storage
+            .from('flipbooks')
+            .upload(filePath, buffer, {
+              contentType: 'image/webp',
+              upsert: true
+            });
 
-        if (uploadError) {
-          console.error(`Error uploading ${key}:`, uploadError);
-          continue;
-        }
+          if (uploadError) {
+            throw new Error(`Error uploading ${key}: ${uploadError.message}`);
+          }
 
-        // Update metadata with the API path (proxying through our redirecting API)
-        const pageIndex = parseInt(key.split('_')[1]) - 1;
-        if (metadata.pages[pageIndex]) {
-          metadata.pages[pageIndex].imagePath = `/api/images/${bookId}/${key}.webp`;
-        }
+          // Update metadata with the API path
+          const pageIndex = parseInt(key.split('_')[1]) - 1;
+          if (metadata.pages[pageIndex]) {
+            metadata.pages[pageIndex].imagePath = `/api/images/${bookId}/${key}.webp`;
+          }
+        })();
+        uploadTasks.push(uploadTask);
       }
     }
 
-    // 2. Save metadata to Supabase Database
+    // 2. Execute all uploads in parallel
+    await Promise.all(uploadTasks);
+
+    // 3. Save metadata to Supabase Database
     const { error: dbError } = await supabase
       .from('books')
       .insert({
@@ -81,11 +89,15 @@ export async function POST(request: Request) {
         metadata: metadata
       });
 
-    if (dbError) throw dbError;
+    if (dbError) {
+      console.error('Database insert error:', dbError);
+      throw new Error(`Database error: ${dbError.message}`);
+    }
 
     return NextResponse.json({ success: true, bookId });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error saving book:', error);
-    return NextResponse.json({ error: 'Failed to save book' }, { status: 500 });
+    const errorMessage = error instanceof Error ? error.message : 'Failed to save book';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
