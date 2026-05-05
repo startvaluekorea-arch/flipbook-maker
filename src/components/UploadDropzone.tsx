@@ -3,6 +3,7 @@
 import React, { useState, useCallback } from 'react';
 import { UploadCloud, File, CheckCircle, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
 interface LinkData {
   url?: string;
@@ -47,14 +48,21 @@ export default function UploadDropzone() {
       const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
       const totalPages = pdf.numPages;
       const pagesData: PageData[] = [];
-      const imageBlobs: Blob[] = [];
+      const bookId = `book_${Date.now()}`;
+      
+      let pageLabels: string[] | null = null;
+      try {
+        pageLabels = await pdf.getPageLabels();
+      } catch {
+        console.warn('Failed to get page labels');
+      }
 
       for (let i = 1; i <= totalPages; i++) {
         setStatus(`페이지 변환 중... (${i}/${totalPages})`);
         setProgress(Math.round((i / totalPages) * 50)); // 50% for parsing
 
         const page = await pdf.getPage(i);
-        const scale = 4.0; // Higher resolution (2x of previous 2.0)
+        const scale = 2.5; // Optimized resolution for better performance with large files
         const viewport = page.getViewport({ scale });
 
         // Extract Links
@@ -106,30 +114,35 @@ export default function UploadDropzone() {
 
         // Convert to WebP
         const blob = await new Promise<Blob>((resolve) => {
-          canvas.toBlob((b) => resolve(b!), 'image/webp', 0.9);
+          canvas.toBlob((b) => resolve(b!), 'image/webp', 0.85);
         });
 
-        imageBlobs.push(blob);
+        // Upload directly to Supabase from client to avoid server payload limits
+        const filePath = `${bookId}/images/page_${i}.webp`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('flipbooks')
+          .upload(filePath, blob, {
+            contentType: 'image/webp',
+            upsert: true
+          });
+
+        if (uploadError) {
+          throw new Error(`페이지 ${i} 업로드 실패: ${uploadError.message}`);
+        }
+
         pagesData.push({
           pageNumber: i,
           width: viewport.width,
           height: viewport.height,
           links,
+          // @ts-ignore - imagePath will be added here
+          imagePath: `/api/images/${bookId}/page_${i}.webp`
         });
       }
 
-      setStatus('서버로 업로드 중...');
-      setProgress(75);
-
-      const formData = new FormData();
-      const bookId = `book_${Date.now()}`;
-      
-      let pageLabels: string[] | null = null;
-      try {
-        pageLabels = await pdf.getPageLabels();
-      } catch {
-        console.warn('Failed to get page labels');
-      }
+      setStatus('서버에 정보 저장 중...');
+      setProgress(90);
 
       const metadata = {
         bookId,
@@ -141,10 +154,8 @@ export default function UploadDropzone() {
         pages: pagesData,
       };
 
+      const formData = new FormData();
       formData.append('metadata', JSON.stringify(metadata));
-      imageBlobs.forEach((blob, index) => {
-        formData.append(`page_${index + 1}`, blob, `page_${index + 1}.webp`);
-      });
 
       const response = await fetch('/api/books', {
         method: 'POST',
