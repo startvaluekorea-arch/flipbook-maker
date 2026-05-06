@@ -115,14 +115,29 @@ const Page = React.forwardRef((props: { page: PageData; onJump?: (pageIndex: num
 Page.displayName = 'Page';
 
 // --- Navigator (Minimap) Component ---
-const Navigator = ({ imagePath, imageSize }: { imagePath: string[]; imageSize: { width: number; height: number } }) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const context = useTransformContext() as any;
-  const { state, setTransform } = context;
-  const { scale, positionX, positionY } = state;
+const Navigator = ({ 
+  imagePath, 
+  imageSize, 
+  transformRef 
+}: { 
+  imagePath: string[]; 
+  imageSize: { width: number; height: number };
+  transformRef: React.RefObject<any>;
+}) => {
   const navRef = useRef<HTMLDivElement>(null);
-  
-  const navWidth = 180; 
+  const [, forceUpdate] = useState({});
+
+  useEffect(() => {
+    // TransformWrapper의 상태 변화를 감지하기 위해 주기적으로 업데이트 (또는 이벤트 리스너 활용)
+    const interval = setInterval(() => forceUpdate({}), 50);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (!transformRef.current) return null;
+
+  const { state } = transformRef.current;
+  const { scale, positionX, positionY } = state;
+  const navWidth = 200; 
   const ratio = imageSize.height / imageSize.width;
   const navHeight = navWidth * ratio;
 
@@ -140,18 +155,17 @@ const Navigator = ({ imagePath, imageSize }: { imagePath: string[]; imageSize: {
   const w = (viewportRight - viewportLeft) * scaleRatio;
   const h = (viewportBottom - viewportTop) * scaleRatio;
 
-  // 내비게이터 클릭/드래그 시 메인 화면 이동 로직
   const handleInteraction = (e: React.MouseEvent) => {
-    if (!navRef.current) return;
+    if (!navRef.current || !transformRef.current) return;
+    
     const rect = navRef.current.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
-    // 클릭한 지점이 화면 중앙에 오도록 타겟 위치 계산
     const targetX = (window.innerWidth / 2) - (mouseX / navWidth) * (imageSize.width * scale);
     const targetY = (window.innerHeight / 2) - (mouseY / navHeight) * (imageSize.height * scale);
 
-    setTransform(targetX, targetY, scale, 0);
+    transformRef.current.setTransform(targetX, targetY, scale, 0);
   };
 
   const onMouseDown = (e: React.MouseEvent) => {
@@ -202,6 +216,7 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const bookRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const transformRef = useRef<any>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [pageInputValue, setPageInputValue] = useState('1');
@@ -509,9 +524,10 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
             onDoubleClick={(e) => e.stopPropagation()}
           >
             <TransformWrapper
-              initialScale={1.2}
+              ref={transformRef}
+              initialScale={1.5}
               minScale={1}
-              maxScale={6}
+              maxScale={8}
               centerOnInit={true}
               wheel={{ step: 0.2 }}
               doubleClick={{ disabled: true }}
@@ -550,8 +566,8 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
                     }
                   }}
                   style={{ 
-                    width: zoomedSpread[0].width * 4, 
-                    height: zoomedSpread[0].height * 2 
+                    width: zoomedSpread[0].width * 2, 
+                    height: zoomedSpread[0].height * 1 
                   }}
                 >
                   <img src={zoomedSpread[0].imagePath} className="w-1/2 h-full object-cover pointer-events-none" alt="Left" />
@@ -561,7 +577,8 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
               <div className="navigator-container">
                 <Navigator 
                   imagePath={[zoomedSpread[0].imagePath, zoomedSpread[1].imagePath]} 
-                  imageSize={{ width: zoomedSpread[0].width * 4, height: zoomedSpread[0].height * 2 }} 
+                  imageSize={{ width: zoomedSpread[0].width * 2, height: zoomedSpread[0].height * 1 }} 
+                  transformRef={transformRef}
                 />
               </div>
             </TransformWrapper>
