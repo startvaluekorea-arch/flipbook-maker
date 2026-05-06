@@ -203,7 +203,6 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
   const [isZoomMode, setIsZoomMode] = useState(false);
   const [zoomedSpread, setZoomedSpread] = useState<PageData[] | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [mouseDownTime, setMouseDownTime] = useState(0);
 
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
@@ -437,17 +436,14 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
               "fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl animate-in fade-in duration-300",
               isDragging ? "cursor-grabbing" : "cursor-zoom-minus"
             )}
-            onMouseDown={(e) => {
-              if ((e.target as HTMLElement).closest('.navigator-container')) return;
-              e.stopPropagation();
-              setMouseDownTime(Date.now());
-            }}
-            onMouseUp={(e) => {
-              e.stopPropagation();
-            }}
             onClick={(e) => {
               e.stopPropagation();
               e.preventDefault();
+              // 드래그 중이 아닐 때만 종료 (onPanningStop의 지연 처리와 연동)
+              if (!isDragging) {
+                setZoomedSpread(null);
+                setIsZoomMode(false);
+              }
             }}
             onDoubleClick={(e) => e.stopPropagation()}
           >
@@ -459,15 +455,11 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
               wheel={{ step: 0.2 }}
               doubleClick={{ disabled: true }}
               limitToBounds={false}
-              onClicked={() => {
-                // 드래그 중이 아니면 즉시 종료
-                if (!isDragging) {
-                  setZoomedSpread(null);
-                  setIsZoomMode(false); // 전체 Enlarge 모드도 함께 종료
-                }
-              }}
               onPanningStart={() => setIsDragging(true)}
-              onPanningStop={() => setTimeout(() => setIsDragging(false), 100)}
+              onPanningStop={() => {
+                // 클릭 이벤트가 발생할 시간을 벌어주기 위해 약간의 지연 후 상태 해제
+                setTimeout(() => setIsDragging(false), 150);
+              }}
             >
               <TransformComponent 
                 wrapperClass="!w-screen !h-screen !bg-transparent" 
