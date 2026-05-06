@@ -116,10 +116,10 @@ export default function UploadDropzone() {
           viewport: viewport,
           intent: 'display', // Back to display intent
           background: 'rgb(255, 255, 255)', // Explicit white background for the renderer
+          canvas: canvas, // Explicitly provide the canvas element to satisfy v5 types
         };
 
-        // @ts-expect-error - pdfjs-dist v5 types might require 'canvas' but 'canvasContext' works in browser
-        await page.render(renderContext as any).promise;
+        await page.render(renderContext).promise;
 
         // Convert to WebP
         const blob = await new Promise<Blob>((resolve) => {
