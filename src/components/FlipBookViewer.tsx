@@ -242,6 +242,18 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
     };
   }, [zoomedSpread, isZoomMode]);
 
+  // 현재 화면에 보이는 좌/우 페이지 데이터를 가져오는 헬퍼 함수
+  const getVisiblePages = (pageIndex: number): (PageData | null)[] => {
+    if (pageIndex === 0) return [null, metadata.pages[0]];
+    if (pageIndex === metadata.totalPages - 1) return [metadata.pages[metadata.totalPages - 1], null];
+    
+    // 1, 3, 5... 인덱스가 왼쪽 / 2, 4, 6... 인덱스가 오른쪽
+    const leftIdx = pageIndex % 2 === 1 ? pageIndex : pageIndex - 1;
+    const rightIdx = leftIdx + 1;
+    
+    return [metadata.pages[leftIdx], metadata.pages[rightIdx]];
+  };
+
   // 화면 크기에 맞게 전자책 크기를 계산하는 함수
   const calculateSize = useCallback(() => {
     if (typeof window === 'undefined' || !metadata.pages || metadata.pages.length === 0) {
