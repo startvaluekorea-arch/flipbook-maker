@@ -147,9 +147,9 @@ const Navigator = ({ imagePath, imageSize }: { imagePath: string[]; imageSize: {
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
-    // 클릭한 지점이 가이드 박스의 중심이 되도록 타겟 위치 계산
-    const targetX = -((mouseX / navWidth) * (imageSize.width * scale) - window.innerWidth / 2);
-    const targetY = -((mouseY / navHeight) * (imageSize.height * scale) - window.innerHeight / 2);
+    // 클릭한 지점이 화면 중앙에 오도록 타겟 위치 계산
+    const targetX = (window.innerWidth / 2) - (mouseX / navWidth) * (imageSize.width * scale);
+    const targetY = (window.innerHeight / 2) - (mouseY / navHeight) * (imageSize.height * scale);
 
     setTransform(targetX, targetY, scale, 0);
   };
@@ -170,7 +170,7 @@ const Navigator = ({ imagePath, imageSize }: { imagePath: string[]; imageSize: {
   return (
     <div 
       ref={navRef}
-      className="absolute bottom-6 left-6 w-[180px] bg-black/60 backdrop-blur-xl border border-white/20 rounded-xl overflow-hidden shadow-2xl z-[110] select-none pointer-events-auto"
+      className="absolute top-24 left-6 w-[180px] bg-black/60 backdrop-blur-xl border border-white/20 rounded-xl overflow-hidden shadow-2xl z-[110] select-none pointer-events-auto"
       style={{ height: navHeight }}
       onMouseDown={onMouseDown}
     >
@@ -513,7 +513,7 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
               centerOnInit={true}
               wheel={{ step: 0.2 }}
               doubleClick={{ disabled: true }}
-              limitToBounds={false}
+              limitToBounds={true}
               onPanningStart={() => setIsDragging(true)}
               onPanningStop={() => {
                 // 클릭 이벤트가 발생할 시간을 벌어주기 위해 약간의 지연 후 상태 해제
