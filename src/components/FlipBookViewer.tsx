@@ -137,9 +137,46 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
     return () => document.removeEventListener('fullscreenchange', handleFsChange);
   }, []);
 
-  const firstPage = metadata.pages[0];
-  const baseWidth = firstPage ? firstPage.width : 800;
-  const baseHeight = firstPage ? firstPage.height : 1131;
+  const [bookSize, setBookSize] = useState({ width: 600, height: 800 });
+
+  // 화면 크기에 맞게 전자책 크기를 계산하는 함수
+  const updateSize = useCallback(() => {
+    if (!metadata.pages || metadata.pages.length === 0) return;
+
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    
+    // 상단 툴바와 하단 컨트롤 패널이 차지하는 공간 예약 (여유 있게 220px 설정)
+    const reservedHeight = 220; 
+    const availableHeight = windowHeight - reservedHeight;
+    const availableWidth = windowWidth - (windowWidth < 768 ? 40 : 120);
+
+    // PDF 비율 유지
+    const firstPage = metadata.pages[0];
+    const pdfAspectRatio = firstPage.width / firstPage.height;
+    const spreadAspectRatio = pdfAspectRatio * 2;
+
+    let finalWidth, finalHeight;
+
+    if (availableWidth / availableHeight > spreadAspectRatio) {
+      finalHeight = availableHeight;
+      finalWidth = finalHeight * spreadAspectRatio;
+    } else {
+      finalWidth = availableWidth;
+      finalHeight = finalWidth / spreadAspectRatio;
+    }
+
+    setBookSize({
+      width: Math.floor(finalWidth / 2),
+      height: Math.floor(finalHeight)
+    });
+  }, [metadata.pages]);
+
+  useEffect(() => {
+    updateSize();
+    window.addEventListener('resize', updateSize);
+    return () => window.removeEventListener('resize', updateSize);
+  }, [updateSize]);
 
   const onPageFlip = useCallback((e: { data: number }) => {
     setCurrentPage(e.data);
@@ -168,44 +205,44 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
   return (
     <div 
       ref={containerRef}
-      className={`flex flex-col w-screen min-h-screen transition-all duration-500 ${isFullScreen ? 'bg-black p-0' : 'bg-zinc-950 pt-2 pb-4'}`}
+      className={`flex flex-col w-screen h-screen overflow-hidden transition-all duration-500 ${isFullScreen ? 'bg-black p-0' : 'bg-zinc-950 p-0'}`}
     >
-      {/* --- Top Utility Toolbar (Fixed height) --- */}
-      <div className="flex-none w-full max-w-7xl mx-auto px-4 py-1 z-30">
-        <div className="flex items-center justify-between px-6 py-2 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl text-white">
-          <div className="flex items-center gap-3">
-            <Link href="/gallery" className="p-2 hover:bg-red-500/20 text-red-400 rounded-lg transition-all" title="Exit to Gallery">
-              <X size={20} />
+      {/* --- Top Utility Toolbar (Slim) --- */}
+      <div className="flex-none w-full max-w-5xl mx-auto px-4 pt-3 pb-1 z-30">
+        <div className="flex items-center justify-between px-5 py-1.5 bg-white/5 backdrop-blur-3xl border border-white/10 rounded-2xl shadow-2xl text-white">
+          <div className="flex items-center gap-2">
+            <Link href="/gallery" className="p-1.5 hover:bg-red-500/20 text-red-400 rounded-lg transition-all" title="Exit to Gallery">
+              <X size={18} />
             </Link>
-            <div className="w-px h-5 bg-white/10 mx-1" />
-            <button className="p-2 hover:bg-white/10 rounded-lg transition-all" title="Index"><Menu size={18} /></button>
-            <button className="p-2 hover:bg-white/10 rounded-lg transition-all" title="Thumbnails"><Layers size={18} /></button>
-            <div className="w-px h-5 bg-white/10 mx-1" />
-            <button className="p-2 hover:bg-white/10 rounded-lg transition-all" title="Search"><Search size={18} /></button>
+            <div className="w-px h-4 bg-white/10 mx-0.5" />
+            <button className="p-1.5 hover:bg-white/10 rounded-lg transition-all" title="Index"><Menu size={16} /></button>
+            <button className="p-1.5 hover:bg-white/10 rounded-lg transition-all" title="Thumbnails"><Layers size={16} /></button>
+            <div className="w-px h-4 bg-white/10 mx-0.5" />
+            <button className="p-1.5 hover:bg-white/10 rounded-lg transition-all" title="Search"><Search size={16} /></button>
           </div>
           
-          <div className="hidden md:flex items-center gap-2 text-sm font-medium tracking-tight opacity-70">
+          <div className="hidden md:flex items-center gap-2 text-[13px] font-medium tracking-tight opacity-40 truncate max-w-[200px]">
             {metadata.originalFileName}
           </div>
 
-          <div className="flex items-center gap-3">
-            <button className="p-2 hover:bg-white/10 rounded-lg transition-all" title="Print"><Printer size={18} /></button>
-            <button className="p-2 hover:bg-white/10 rounded-lg transition-all" title="Download"><Download size={18} /></button>
-            <button className="p-2 hover:bg-white/10 rounded-lg transition-all" title="Share"><Share2 size={18} /></button>
-            <div className="w-px h-5 bg-white/10 mx-1" />
+          <div className="flex items-center gap-2">
+            <button className="p-1.5 hover:bg-white/10 rounded-lg transition-all" title="Print"><Printer size={16} /></button>
+            <button className="p-1.5 hover:bg-white/10 rounded-lg transition-all" title="Download"><Download size={16} /></button>
+            <button className="p-1.5 hover:bg-white/10 rounded-lg transition-all" title="Share"><Share2 size={16} /></button>
+            <div className="w-px h-4 bg-white/10 mx-0.5" />
             <button 
               onClick={toggleFullScreen} 
-              className="p-2 hover:bg-white/10 rounded-lg transition-all text-blue-400"
+              className="p-1.5 hover:bg-white/10 rounded-lg transition-all text-blue-400"
               title={isFullScreen ? "Exit Fullscreen" : "Fullscreen"}
             >
-              {isFullScreen ? <Minimize size={18} /> : <Maximize size={18} />}
+              {isFullScreen ? <Minimize size={16} /> : <Maximize size={16} />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* --- Main Viewer Section (Fills remaining space) --- */}
-      <div className="flex-1 relative w-full flex justify-center items-center px-4 md:px-12 pt-0 pb-2 overflow-hidden min-h-[500px] max-h-[calc(100vh-190px)]">
+      {/* --- Main Viewer Section (Fully Responsive) --- */}
+      <div className="flex-1 relative w-full flex justify-center items-center px-2 md:px-10 overflow-hidden">
         {/* Navigation Buttons (Floating) --- Now positioned slightly differently to avoid edge clipping */}
         <button
           onClick={prevButtonClick}
@@ -218,8 +255,8 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
         <div className="w-full h-full max-w-full max-h-full flex justify-center items-center overflow-hidden">
           {/* @ts-expect-error - react-pageflip typings */}
           <HTMLFlipBook
-            width={baseWidth}
-            height={baseHeight}
+            width={bookSize.width}
+            height={bookSize.height}
             size="stretch"
             minWidth={200}
             maxWidth={1600}
