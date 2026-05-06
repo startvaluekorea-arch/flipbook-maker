@@ -667,8 +667,8 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
                     }
                   }}
                   style={{ 
-                    width: zoomedSpread[0].width * 2, 
-                    height: zoomedSpread[0].height * 1 
+                    width: zoomedSpread[0].width, 
+                    height: zoomedSpread[0].height * 0.5 
                   }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -680,7 +680,7 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
               <div className="navigator-container">
                 <Navigator 
                   imagePath={[zoomedSpread[0].imagePath, zoomedSpread[1].imagePath]} 
-                  imageSize={{ width: zoomedSpread[0].width * 2, height: zoomedSpread[0].height * 1 }} 
+                  imageSize={{ width: zoomedSpread[0].width, height: zoomedSpread[0].height * 0.5 }} 
                   transformRef={transformRef}
                 />
               </div>
