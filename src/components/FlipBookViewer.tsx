@@ -122,18 +122,23 @@ const Navigator = ({ imagePath, imageSize }: { imagePath: string[]; imageSize: {
   const { scale, positionX, positionY } = state;
   const navRef = useRef<HTMLDivElement>(null);
   
-  // 내비게이터 고정 너비 (펼침면이므로 더 넓게 280px)
-  const navWidth = 280; 
+  const navWidth = 180; 
   const ratio = imageSize.height / imageSize.width;
   const navHeight = navWidth * ratio;
 
-  // 화면 크기 대비 가시 영역(빨간 상자) 크기 계산
-  const viewWidth = (window.innerWidth / (imageSize.width * scale)) * navWidth;
-  const viewHeight = (window.innerHeight / (imageSize.height * scale)) * navHeight;
+  // Viewport의 경계를 이미지 좌표계(scaled)로 계산
+  const viewportLeft = Math.max(0, -positionX);
+  const viewportTop = Math.max(0, -positionY);
+  const viewportRight = Math.min(imageSize.width * scale, -positionX + window.innerWidth);
+  const viewportBottom = Math.min(imageSize.height * scale, -positionY + window.innerHeight);
+
+  // 이미지 좌표계(scaled)를 미니맵 좌표계(pixels)로 변환
+  const scaleRatio = navWidth / (imageSize.width * scale);
   
-  // 패닝 위치에 따른 상자 위치 계산
-  const x = (-positionX / (imageSize.width * scale)) * navWidth;
-  const y = (-positionY / (imageSize.height * scale)) * navHeight;
+  const x = viewportLeft * scaleRatio;
+  const y = viewportTop * scaleRatio;
+  const w = (viewportRight - viewportLeft) * scaleRatio;
+  const h = (viewportBottom - viewportTop) * scaleRatio;
 
   // 내비게이터 클릭/드래그 시 메인 화면 이동 로직
   const handleInteraction = (e: React.MouseEvent) => {
@@ -142,9 +147,9 @@ const Navigator = ({ imagePath, imageSize }: { imagePath: string[]; imageSize: {
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
-    // 클릭한 지점이 빨간 상자의 중심이 되도록 타겟 위치 계산
-    const targetX = -((mouseX - viewWidth / 2) / navWidth) * (imageSize.width * scale);
-    const targetY = -((mouseY - viewHeight / 2) / navHeight) * (imageSize.height * scale);
+    // 클릭한 지점이 가이드 박스의 중심이 되도록 타겟 위치 계산
+    const targetX = -((mouseX / navWidth) * (imageSize.width * scale) - window.innerWidth / 2);
+    const targetY = -((mouseY / navHeight) * (imageSize.height * scale) - window.innerHeight / 2);
 
     setTransform(targetX, targetY, scale, 0);
   };
@@ -165,8 +170,8 @@ const Navigator = ({ imagePath, imageSize }: { imagePath: string[]; imageSize: {
   return (
     <div 
       ref={navRef}
-      className="absolute top-24 left-6 z-[100] border-2 border-white/30 rounded-xl overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.5)] bg-zinc-900/80 backdrop-blur-xl animate-in fade-in slide-in-from-left-4 duration-500 cursor-crosshair" 
-      style={{ width: navWidth, height: navHeight }}
+      className="absolute bottom-6 left-6 w-[180px] bg-black/60 backdrop-blur-xl border border-white/20 rounded-xl overflow-hidden shadow-2xl z-[110] select-none pointer-events-auto"
+      style={{ height: navHeight }}
       onMouseDown={onMouseDown}
     >
       <div className="absolute top-0 left-0 w-full px-3 py-1.5 bg-black/40 border-b border-white/10 z-10 flex items-center justify-between pointer-events-none">
@@ -181,10 +186,10 @@ const Navigator = ({ imagePath, imageSize }: { imagePath: string[]; imageSize: {
       <div 
         className="absolute border-2 border-red-500 bg-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.5)] transition-all duration-75 pointer-events-none"
         style={{
-          width: Math.min(viewWidth, navWidth),
-          height: Math.min(viewHeight, navHeight),
-          left: Math.max(0, Math.min(x, navWidth - viewWidth)),
-          top: Math.max(0, Math.min(y, navHeight - viewHeight)),
+          width: w,
+          height: h,
+          left: x,
+          top: y,
         }}
       />
     </div>
