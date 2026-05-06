@@ -55,8 +55,9 @@ const Page = React.forwardRef((props: { page: PageData; onJump?: (pageIndex: num
       <Image
         src={page.imagePath}
         alt={`Page ${page.pageNumber}`}
-        fill
-        className="object-contain pointer-events-none select-none"
+        width={page.width}
+        height={page.height}
+        className="w-full h-full object-contain pointer-events-none select-none"
         decoding="async"
         unoptimized
       />
@@ -180,10 +181,11 @@ const Navigator = ({ imagePath, imageSize }: { imagePath: string[]; imageSize: {
           <div key={idx} className="relative h-full flex-1">
             <Image 
               src={path} 
-              fill
-              className="object-cover opacity-60" 
               alt="Minimap"
-              unoptimized // 외부 URL 캐싱 문제 방지
+              width={200} // Navigator용 고정 비율 너비
+              height={300}
+              className="w-full h-full object-cover opacity-60" 
+              unoptimized
             />
           </div>
         ))}
@@ -557,21 +559,23 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
                     height: zoomedSpread[0].height * 2 
                   }}
                 >
-                  <div className="relative flex-1 h-full">
+                  <div className="flex-1 h-full">
                     <Image 
                       src={zoomedSpread[0].imagePath} 
-                      fill
-                      className="object-contain pointer-events-none" 
+                      width={zoomedSpread[0].width * 4}
+                      height={zoomedSpread[0].height * 4}
+                      className="w-full h-full object-contain pointer-events-none" 
                       alt="Left" 
                       unoptimized
                       priority
                     />
                   </div>
-                  <div className="relative flex-1 h-full">
+                  <div className="flex-1 h-full">
                     <Image 
                       src={zoomedSpread[1].imagePath} 
-                      fill
-                      className="object-contain pointer-events-none" 
+                      width={zoomedSpread[1].width * 4}
+                      height={zoomedSpread[1].height * 4}
+                      className="w-full h-full object-contain pointer-events-none" 
                       alt="Right" 
                       unoptimized
                       priority
