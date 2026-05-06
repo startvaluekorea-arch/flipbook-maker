@@ -46,7 +46,12 @@ export default function UploadDropzone() {
       pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
       const arrayBuffer = await file.arrayBuffer();
-      const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+      const pdf = await pdfjs.getDocument({ 
+        data: arrayBuffer,
+        cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
+        cMapPacked: true,
+        standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`,
+      }).promise;
       const totalPages = pdf.numPages;
       const pagesData: PageData[] = [];
       const bookId = `book_${Date.now()}`;
@@ -103,20 +108,19 @@ export default function UploadDropzone() {
 
         // Render to Canvas
         const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d', { alpha: false })!; // Optimize for opaque background
+        const context = canvas.getContext('2d')!; // Revert to default for better compatibility
         canvas.width = viewport.width;
         canvas.height = viewport.height;
 
-        // Fill background with white
+        // Ensure canvas background is white
         context.fillStyle = '#ffffff';
         context.fillRect(0, 0, canvas.width, canvas.height);
 
         const renderContext = {
           canvasContext: context,
           viewport: viewport,
-          intent: 'display', // Back to display intent
-          background: 'rgb(255, 255, 255)', // Explicit white background for the renderer
-          canvas: canvas, // Explicitly provide the canvas element to satisfy v5 types
+          background: 'white',
+          canvas: canvas,
         };
 
         await page.render(renderContext).promise;
