@@ -318,22 +318,20 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
     printWindow.document.close();
   };
 
-  const handleDownload = () => {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    if (!supabaseUrl) {
-      alert('다운로드 서버 주소를 찾을 수 없습니다.');
-      return;
+  const handleDownload = async () => {
+    try {
+      const downloadUrl = `/api/books/${metadata.bookId}/download`;
+      
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = metadata.originalFileName || 'document.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert('다운로드에 실패했습니다. 원본 파일이 저장되어 있지 않거나 서버 연결에 실패했습니다.');
     }
-    
-    const pdfUrl = `${supabaseUrl}/storage/v1/object/public/flipbooks/${metadata.bookId}/original.pdf`;
-    
-    const link = document.createElement('a');
-    link.href = pdfUrl;
-    link.download = metadata.originalFileName;
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
 
