@@ -118,7 +118,6 @@ export default function UploadDropzone() {
         context.fillStyle = '#ffffff';
         context.fillRect(0, 0, canvas.width, canvas.height);
 
-        // @ts-expect-error - pdfjs-dist v4 types
         const renderContext = {
           canvasContext: context,
           viewport: viewport,
