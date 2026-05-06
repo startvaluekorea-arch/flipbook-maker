@@ -202,6 +202,7 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
   const [isZoomMode, setIsZoomMode] = useState(false);
   const [zoomedSpread, setZoomedSpread] = useState<PageData[] | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [mouseDownTime, setMouseDownTime] = useState(0);
 
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
@@ -427,23 +428,42 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
 
         {/* --- Zoom Overlay & Navigator --- */}
         {zoomedSpread && (
-          <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl animate-in fade-in duration-300">
+          <div 
+            className={clsx(
+              "fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl animate-in fade-in duration-300",
+              isDragging ? "cursor-grabbing" : "cursor-zoom-minus"
+            )}
+            onMouseDown={(e) => {
+              // Navigator 클릭 시에는 닫히지 않도록
+              if ((e.target as HTMLElement).closest('.navigator-container')) return;
+              setMouseDownTime(Date.now());
+            }}
+            onMouseUp={(e) => {
+              if ((e.target as HTMLElement).closest('.navigator-container')) return;
+              // 200ms 미만이고 드래그가 거의 없으면 클릭으로 간주하여 축소
+              if (Date.now() - mouseDownTime < 200 && !isDragging) {
+                setZoomedSpread(null);
+              }
+            }}
+          >
             <TransformWrapper
               initialScale={1.5}
               minScale={1}
               maxScale={6}
               centerOnInit={true}
               wheel={{ step: 0.2 }}
-              limitToBounds={false} // 패닝 범위를 더 자유롭게 설정
+              limitToBounds={false}
               onPanningStart={() => setIsDragging(true)}
               onPanningStop={() => setTimeout(() => setIsDragging(false), 100)}
             >
-              <TransformComponent wrapperClass="!w-screen !h-screen" contentClass="!w-screen !h-screen flex items-center justify-center">
+              <TransformComponent 
+                wrapperClass="!w-screen !h-screen !bg-transparent" 
+                contentClass="!w-screen !h-screen flex items-center justify-center !bg-transparent"
+              >
                 <div 
-                  className="flex max-w-none shadow-2xl cursor-zoom-minus"
-                  onClick={() => !isDragging && setZoomedSpread(null)}
+                  className="flex max-w-none shadow-2xl pointer-events-auto"
                   style={{ 
-                    width: zoomedSpread[0].width * 4, // Spread 너비 (2페이지 분량)
+                    width: zoomedSpread[0].width * 4, 
                     height: zoomedSpread[0].height * 2 
                   }}
                 >
@@ -451,10 +471,12 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
                   <img src={zoomedSpread[1].imagePath} className="h-full object-contain pointer-events-none" alt="Right" />
                 </div>
               </TransformComponent>
-              <Navigator 
-                imagePath={[zoomedSpread[0].imagePath, zoomedSpread[1].imagePath]} 
-                imageSize={{ width: zoomedSpread[0].width * 4, height: zoomedSpread[0].height * 2 }} 
-              />
+              <div className="navigator-container">
+                <Navigator 
+                  imagePath={[zoomedSpread[0].imagePath, zoomedSpread[1].imagePath]} 
+                  imageSize={{ width: zoomedSpread[0].width * 4, height: zoomedSpread[0].height * 2 }} 
+                />
+              </div>
             </TransformWrapper>
 
             {/* Zoom Controls Overlay */}
