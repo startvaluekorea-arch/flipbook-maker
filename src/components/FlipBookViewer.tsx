@@ -170,64 +170,64 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
   return (
     <div 
       ref={containerRef}
-      className={`flex flex-col w-full h-full min-h-[80vh] items-center transition-all duration-500 ${isFullScreen ? 'bg-zinc-900 p-0' : 'bg-transparent'}`}
+      className={`flex flex-col w-screen h-screen overflow-hidden transition-all duration-500 ${isFullScreen ? 'bg-black' : 'bg-zinc-950'}`}
     >
-      {/* --- Top Utility Toolbar --- */}
-      <div className="w-full max-w-6xl px-4 mt-4 mb-6 z-30">
-        <div className="flex items-center justify-between px-6 py-3 bg-white/10 backdrop-blur-xl border border-white/20 rounded-[1.5rem] shadow-2xl text-white">
-          <div className="flex items-center gap-4">
-            <button className="p-2 hover:bg-white/10 rounded-xl transition-all" title="Index"><Menu size={20} /></button>
-            <button className="p-2 hover:bg-white/10 rounded-xl transition-all" title="Thumbnails"><Layers size={20} /></button>
-            <div className="w-px h-6 bg-white/10 mx-1" />
-            <button className="p-2 hover:bg-white/10 rounded-xl transition-all" title="Search"><Search size={20} /></button>
+      {/* --- Top Utility Toolbar (Fixed height) --- */}
+      <div className="flex-none w-full max-w-7xl mx-auto px-4 py-4 z-30">
+        <div className="flex items-center justify-between px-6 py-2 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl text-white">
+          <div className="flex items-center gap-3">
+            <button className="p-2 hover:bg-white/10 rounded-lg transition-all" title="Index"><Menu size={18} /></button>
+            <button className="p-2 hover:bg-white/10 rounded-lg transition-all" title="Thumbnails"><Layers size={18} /></button>
+            <div className="w-px h-5 bg-white/10 mx-1" />
+            <button className="p-2 hover:bg-white/10 rounded-lg transition-all" title="Search"><Search size={18} /></button>
           </div>
           
-          <div className="hidden md:flex items-center gap-2 font-medium tracking-tight opacity-90">
+          <div className="hidden md:flex items-center gap-2 text-sm font-medium tracking-tight opacity-70">
             {metadata.originalFileName}
           </div>
 
-          <div className="flex items-center gap-4">
-            <button className="p-2 hover:bg-white/10 rounded-xl transition-all" title="Print"><Printer size={20} /></button>
-            <button className="p-2 hover:bg-white/10 rounded-xl transition-all" title="Download"><Download size={20} /></button>
-            <button className="p-2 hover:bg-white/10 rounded-xl transition-all" title="Share"><Share2 size={20} /></button>
-            <div className="w-px h-6 bg-white/10 mx-1" />
+          <div className="flex items-center gap-3">
+            <button className="p-2 hover:bg-white/10 rounded-lg transition-all" title="Print"><Printer size={18} /></button>
+            <button className="p-2 hover:bg-white/10 rounded-lg transition-all" title="Download"><Download size={18} /></button>
+            <button className="p-2 hover:bg-white/10 rounded-lg transition-all" title="Share"><Share2 size={18} /></button>
+            <div className="w-px h-5 bg-white/10 mx-1" />
             <button 
               onClick={toggleFullScreen} 
-              className="p-2 hover:bg-white/10 rounded-xl transition-all text-blue-400"
+              className="p-2 hover:bg-white/10 rounded-lg transition-all text-blue-400"
               title={isFullScreen ? "Exit Fullscreen" : "Fullscreen"}
             >
-              {isFullScreen ? <Minimize size={20} /> : <Maximize size={20} />}
+              {isFullScreen ? <Minimize size={18} /> : <Maximize size={18} />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* --- Main Viewer Section --- */}
-      <div className="relative flex-1 w-full flex justify-center items-center px-4 md:px-16 overflow-hidden">
-        {/* Navigation Buttons (Desktop) */}
+      {/* --- Main Viewer Section (Fills remaining space) --- */}
+      <div className="flex-1 relative w-full flex justify-center items-center px-4 md:px-12 py-2 overflow-hidden">
+        {/* Navigation Buttons (Floating) */}
         <button
           onClick={prevButtonClick}
-          className="hidden md:flex absolute left-8 z-20 p-4 bg-white/10 backdrop-blur-lg border border-white/20 rounded-full shadow-2xl text-white hover:bg-white/20 disabled:opacity-5 transition-all hover:scale-110 active:scale-95"
+          className="absolute left-6 z-20 p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl text-white hover:bg-white/20 disabled:opacity-5 transition-all hover:scale-110 active:scale-95"
           disabled={currentPage === 0}
         >
           <ChevronLeft size={32} />
         </button>
         
-        <div className="w-full max-w-[95vw] h-full flex justify-center items-center perspective-1000">
+        <div className="w-full h-full max-w-full max-h-full flex justify-center items-center">
           {/* @ts-expect-error - react-pageflip typings */}
           <HTMLFlipBook
             width={baseWidth}
             height={baseHeight}
             size="stretch"
-            minWidth={315}
-            maxWidth={2000}
+            minWidth={300}
+            maxWidth={1800}
             minHeight={400}
-            maxHeight={3000}
-            maxShadowOpacity={0.35}
+            maxHeight={2500}
+            maxShadowOpacity={0.4}
             showCover={true}
             mobileScrollSupport={true}
             onFlip={onPageFlip}
-            className="flipbook-canvas shadow-[0_50px_100px_-20px_rgba(0,0,0,0.5)]"
+            className="flipbook-canvas"
             ref={bookRef}
             usePortrait={false}
             flippingTime={800}
@@ -244,16 +244,16 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
 
         <button
           onClick={nextButtonClick}
-          className="hidden md:flex absolute right-8 z-20 p-4 bg-white/10 backdrop-blur-lg border border-white/20 rounded-full shadow-2xl text-white hover:bg-white/20 disabled:opacity-5 transition-all hover:scale-110 active:scale-95"
+          className="absolute right-6 z-20 p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl text-white hover:bg-white/20 disabled:opacity-5 transition-all hover:scale-110 active:scale-95"
           disabled={currentPage >= metadata.totalPages - 1}
         >
           <ChevronRight size={32} />
         </button>
       </div>
 
-      {/* --- Bottom Navigation Control Panel --- */}
-      <div className="w-full max-w-4xl px-4 mt-6 mb-10 z-30">
-        <div className="flex flex-col gap-4 p-6 bg-white/10 backdrop-blur-xl border border-white/20 rounded-[2rem] shadow-2xl text-white">
+      {/* --- Bottom Navigation Control Panel (Fixed height) --- */}
+      <div className="flex-none w-full max-w-4xl mx-auto px-4 py-6 z-30">
+        <div className="flex flex-col gap-3 p-5 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl text-white">
           {/* Slider */}
           <div className="w-full px-2">
             <input 
@@ -262,16 +262,16 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
               max={metadata.totalPages - 1} 
               value={currentPage}
               onChange={(e) => jumpToPage(parseInt(e.target.value))}
-              className="w-full h-1.5 bg-white/20 rounded-lg appearance-none cursor-pointer accent-blue-500 hover:accent-blue-400 transition-all"
+              className="w-full h-1 bg-white/10 rounded-lg appearance-none cursor-pointer accent-blue-500 hover:accent-blue-400 transition-all"
             />
           </div>
 
           <div className="flex items-center justify-between px-2">
-            <div className="flex items-center gap-2">
-              <button className="p-2 hover:bg-white/10 rounded-xl transition-all"><Plus size={18} /></button>
-              <button className="p-2 hover:bg-white/10 rounded-xl transition-all"><Minus size={18} /></button>
-              <div className="w-px h-6 bg-white/10 mx-1" />
-              <button className="p-2 hover:bg-white/10 rounded-xl transition-all text-xs font-bold tracking-widest uppercase opacity-70 hover:opacity-100">Auto Play</button>
+            <div className="flex items-center gap-1">
+              <button className="p-2 hover:bg-white/10 rounded-lg transition-all"><Plus size={16} /></button>
+              <button className="p-2 hover:bg-white/10 rounded-lg transition-all"><Minus size={16} /></button>
+              <div className="w-px h-5 bg-white/10 mx-1" />
+              <button className="px-3 py-1 hover:bg-white/10 rounded-lg transition-all text-[10px] font-bold tracking-widest uppercase opacity-50 hover:opacity-100">Auto Play</button>
             </div>
 
             <div className="flex items-center gap-4">
@@ -280,14 +280,14 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
                   type="text" 
                   value={pageInputValue}
                   onChange={(e) => setPageInputValue(e.target.value)}
-                  className="w-12 h-9 bg-white/10 border border-white/20 rounded-lg text-center font-bold focus:outline-none focus:border-blue-500/50 transition-all"
+                  className="w-10 h-8 bg-white/5 border border-white/10 rounded-lg text-center font-bold text-sm focus:outline-none focus:border-blue-500/50 transition-all"
                 />
-                <span className="text-white/50 font-medium">/ {metadata.totalPages}</span>
+                <span className="text-white/30 text-xs font-medium">/ {metadata.totalPages}</span>
               </form>
             </div>
 
             <div className="flex items-center gap-2">
-              <button className="p-2 hover:bg-white/10 rounded-xl transition-all"><Settings size={18} /></button>
+              <button className="p-2 hover:bg-white/10 rounded-lg transition-all"><Settings size={16} /></button>
             </div>
           </div>
         </div>
