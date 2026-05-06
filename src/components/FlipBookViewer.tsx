@@ -555,7 +555,7 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
               doubleClick={{ disabled: true }}
               limitToBounds={true}
               panning={{ velocityDisabled: true }}
-              alignmentAnimation={{ disabled: true }}
+              velocityAnimation={{ disabled: true }}
               onPanningStart={() => setIsDragging(true)}
               onPanningStop={() => {
                 // 클릭 이벤트가 발생할 시간을 벌어주기 위해 약간의 지연 후 상태 해제
