@@ -410,10 +410,10 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
             ref={bookRef}
             usePortrait={false}
             flippingTime={800}
-            useMouseEvents={true}
+            useMouseEvents={!zoomedSpread} // 확대 중에는 마우스 이벤트 차단
             swipeDistance={40}
             showPageCorners={true}
-            disableFlipByClick={false}
+            disableFlipByClick={zoomedSpread !== null} // 확대 중에는 클릭에 의한 넘김 방지
           >
             {metadata.pages.map((page, idx) => {
               const isCover = idx === 0 || idx === metadata.totalPages - 1;
@@ -438,16 +438,15 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
               isDragging ? "cursor-grabbing" : "cursor-zoom-minus"
             )}
             onMouseDown={(e) => {
-              // Navigator 클릭 시에는 닫히지 않도록
               if ((e.target as HTMLElement).closest('.navigator-container')) return;
               setMouseDownTime(Date.now());
             }}
             onMouseUp={(e) => {
               if ((e.target as HTMLElement).closest('.navigator-container')) return;
-              // 250ms 미만이고 드래그가 거의 없으면 클릭으로 간주하여 축소
-              if (Date.now() - mouseDownTime < 250 && !isDragging) {
-                // 레이스 컨디션 방지: 아주 짧은 지연을 주어 배경의 클릭 이벤트를 무시하게 함
-                setTimeout(() => setZoomedSpread(null), 50);
+              const duration = Date.now() - mouseDownTime;
+              // 짧은 클릭(300ms 미만)이고 드래그 중이 아니면 즉시 종료
+              if (duration < 300 && !isDragging) {
+                setTimeout(() => setZoomedSpread(null), 10);
               }
             }}
             onClick={(e) => {
