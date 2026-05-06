@@ -117,11 +117,6 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [pageInputValue, setPageInputValue] = useState('1');
 
-  // Sync input value with current page
-  useEffect(() => {
-    setPageInputValue((currentPage + 1).toString());
-  }, [currentPage]);
-
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
       containerRef.current?.requestFullscreen().catch((err) => {
@@ -146,6 +141,7 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
 
   const onPageFlip = useCallback((e: { data: number }) => {
     setCurrentPage(e.data);
+    setPageInputValue((e.data + 1).toString());
   }, []);
 
   const jumpToPage = useCallback((pageIndex: number) => {
