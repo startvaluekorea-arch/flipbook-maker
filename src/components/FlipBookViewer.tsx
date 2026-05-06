@@ -157,9 +157,9 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
             height={baseHeight}
             size="stretch"
             minWidth={315}
-            maxWidth={1000}
+            maxWidth={2000}
             minHeight={400}
-            maxHeight={1533}
+            maxHeight={3000}
             maxShadowOpacity={0.3}
             showCover={true}
             mobileScrollSupport={true}

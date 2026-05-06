@@ -62,7 +62,7 @@ export default function UploadDropzone() {
         setProgress(Math.round((i / totalPages) * 50)); // 50% for parsing
 
         const page = await pdf.getPage(i);
-        const scale = 2.5; // Optimized resolution for better performance with large files
+        const scale = 4.0; // Maximum resolution for best quality
         const viewport = page.getViewport({ scale });
 
         // Extract Links
@@ -114,7 +114,7 @@ export default function UploadDropzone() {
 
         // Convert to WebP
         const blob = await new Promise<Blob>((resolve) => {
-          canvas.toBlob((b) => resolve(b!), 'image/webp', 0.85);
+          canvas.toBlob((b) => resolve(b!), 'image/webp', 0.95);
         });
 
         // Upload directly to Supabase from client to avoid server payload limits
