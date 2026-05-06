@@ -388,7 +388,10 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
           <ChevronLeft size={32} />
         </button>
         
-        <div className="w-full h-full max-w-full max-h-full flex justify-center items-center overflow-hidden">
+        <div className={clsx(
+          "w-full h-full max-w-full max-h-full flex justify-center items-center overflow-hidden transition-all duration-500",
+          zoomedSpread && "opacity-0 pointer-events-none scale-95" // 확대 중에는 배경을 안 보이게 하거나 클릭 방지
+        )}>
           {/* @ts-expect-error - react-pageflip typings */}
           <HTMLFlipBook
             key={`flipbook-${bookSize.width}-${bookSize.height}-${metadata.pages.length}`}
@@ -435,15 +438,13 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
               isDragging ? "cursor-grabbing" : "cursor-zoom-minus"
             )}
             onMouseDown={(e) => {
-              e.stopPropagation();
               // Navigator 클릭 시에는 닫히지 않도록
               if ((e.target as HTMLElement).closest('.navigator-container')) return;
               setMouseDownTime(Date.now());
             }}
             onMouseUp={(e) => {
-              e.stopPropagation();
               if ((e.target as HTMLElement).closest('.navigator-container')) return;
-              // 250ms 미만이고 드래그가 거의 없으면 클릭으로 간주하여 축소 (시간 임계값 약간 상향)
+              // 250ms 미만이고 드래그가 거의 없으면 클릭으로 간주하여 축소
               if (Date.now() - mouseDownTime < 250 && !isDragging) {
                 setZoomedSpread(null);
               }
