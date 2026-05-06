@@ -284,8 +284,8 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
         </head>
         <body>
           <div class="spread">
-            \${leftPage ? \`<img src="\${leftPage.imagePath}" />\` : ''}
-            \${rightPage ? \`<img src="\${rightPage.imagePath}" />\` : ''}
+            ${leftPage ? `<img src="${leftPage.imagePath}" />` : ''}
+            ${rightPage ? `<img src="${rightPage.imagePath}" />` : ''}
           </div>
           <script>
             const imgs = document.querySelectorAll('img');
@@ -324,7 +324,7 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
       return;
     }
     
-    const pdfUrl = \`\${supabaseUrl}/storage/v1/object/public/flipbooks/\${metadata.bookId}/original.pdf\`;
+    const pdfUrl = `${supabaseUrl}/storage/v1/object/public/flipbooks/${metadata.bookId}/original.pdf`;
     
     const link = document.createElement('a');
     link.href = pdfUrl;
