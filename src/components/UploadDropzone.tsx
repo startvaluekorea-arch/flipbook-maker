@@ -16,6 +16,7 @@ interface PageData {
   width: number;
   height: number;
   links: LinkData[];
+  imagePath: string;
 }
 
 export default function UploadDropzone() {
@@ -136,7 +137,6 @@ export default function UploadDropzone() {
           width: viewport.width,
           height: viewport.height,
           links,
-          // @ts-ignore - imagePath will be added here
           imagePath: `/api/images/${bookId}/page_${i}.webp`
         });
       }

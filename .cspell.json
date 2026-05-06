@@ -1,0 +1,19 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "supabase",
+    "Supabase",
+    "flipbooks",
+    "pageflip",
+    "flipbook",
+    "bookId",
+    "lucide",
+    "pdfjs"
+  ],
+  "ignorePaths": [
+    "node_modules",
+    ".next",
+    "out.txt"
+  ]
+}
