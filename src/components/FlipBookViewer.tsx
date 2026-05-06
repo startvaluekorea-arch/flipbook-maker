@@ -284,8 +284,8 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
         </head>
         <body>
           <div class="spread">
-            ${leftPage ? `<img src="${leftPage.imagePath}" />` : ''}
-            ${rightPage ? `<img src="${rightPage.imagePath}" />` : ''}
+            ${leftPage ? `<img src="${leftPage.imagePath.startsWith('http') ? leftPage.imagePath : (process.env.NEXT_PUBLIC_SUPABASE_URL + leftPage.imagePath)}" />` : ''}
+            ${rightPage ? `<img src="${rightPage.imagePath.startsWith('http') ? rightPage.imagePath : (process.env.NEXT_PUBLIC_SUPABASE_URL + rightPage.imagePath)}" />` : ''}
           </div>
           <script>
             const imgs = document.querySelectorAll('img');
