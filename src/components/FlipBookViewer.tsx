@@ -166,10 +166,10 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
   return (
     <div 
       ref={containerRef}
-      className={`flex flex-col w-screen h-screen overflow-hidden transition-all duration-500 ${isFullScreen ? 'bg-black' : 'bg-zinc-950'}`}
+      className={`flex flex-col w-screen min-h-screen transition-all duration-500 ${isFullScreen ? 'bg-black p-0' : 'bg-zinc-950 pt-24 pb-8'}`}
     >
       {/* --- Top Utility Toolbar (Fixed height) --- */}
-      <div className="flex-none w-full max-w-7xl mx-auto px-4 py-4 z-30">
+      <div className="flex-none w-full max-w-7xl mx-auto px-4 py-2 z-30">
         <div className="flex items-center justify-between px-6 py-2 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl text-white">
           <div className="flex items-center gap-3">
             <button className="p-2 hover:bg-white/10 rounded-lg transition-all" title="Index"><Menu size={18} /></button>
@@ -199,26 +199,26 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
       </div>
 
       {/* --- Main Viewer Section (Fills remaining space) --- */}
-      <div className="flex-1 relative w-full flex justify-center items-center px-4 md:px-12 py-2 overflow-hidden">
-        {/* Navigation Buttons (Floating) */}
+      <div className="flex-1 relative w-full flex justify-center items-center px-4 md:px-12 py-6 overflow-hidden min-h-[500px] max-h-[calc(100vh-320px)]">
+        {/* Navigation Buttons (Floating) --- Now positioned slightly differently to avoid edge clipping */}
         <button
           onClick={prevButtonClick}
-          className="absolute left-6 z-20 p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl text-white hover:bg-white/20 disabled:opacity-5 transition-all hover:scale-110 active:scale-95"
+          className="absolute left-4 md:left-10 z-20 p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl text-white hover:bg-white/20 disabled:opacity-5 transition-all hover:scale-110 active:scale-95"
           disabled={currentPage === 0}
         >
           <ChevronLeft size={32} />
         </button>
         
-        <div className="w-full h-full max-w-full max-h-full flex justify-center items-center">
+        <div className="w-full h-full max-w-full max-h-full flex justify-center items-center overflow-hidden">
           {/* @ts-expect-error - react-pageflip typings */}
           <HTMLFlipBook
             width={baseWidth}
             height={baseHeight}
             size="stretch"
-            minWidth={300}
-            maxWidth={1800}
-            minHeight={400}
-            maxHeight={2500}
+            minWidth={200}
+            maxWidth={1600}
+            minHeight={300}
+            maxHeight={2000}
             maxShadowOpacity={0.4}
             showCover={true}
             mobileScrollSupport={true}
@@ -240,7 +240,7 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
 
         <button
           onClick={nextButtonClick}
-          className="absolute right-6 z-20 p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl text-white hover:bg-white/20 disabled:opacity-5 transition-all hover:scale-110 active:scale-95"
+          className="absolute right-4 md:right-10 z-20 p-4 bg-white/5 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl text-white hover:bg-white/20 disabled:opacity-5 transition-all hover:scale-110 active:scale-95"
           disabled={currentPage >= metadata.totalPages - 1}
         >
           <ChevronRight size={32} />
