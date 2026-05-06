@@ -508,7 +508,7 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
               centerOnInit={true}
               wheel={{ step: 0.2 }}
               doubleClick={{ disabled: true }}
-              limitToBounds={false}
+              limitToBounds={true}
               onPanningStart={() => setIsDragging(true)}
               onPanningStop={() => {
                 // 클릭 이벤트가 발생할 시간을 벌어주기 위해 약간의 지연 후 상태 해제
