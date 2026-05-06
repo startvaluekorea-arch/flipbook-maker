@@ -114,12 +114,12 @@ const Page = React.forwardRef((props: { page: PageData; onJump?: (pageIndex: num
 Page.displayName = 'Page';
 
 // --- Navigator (Minimap) Component ---
-const Navigator = ({ imagePath, imageSize }: { imagePath: string; imageSize: { width: number; height: number } }) => {
+const Navigator = ({ imagePath, imageSize }: { imagePath: string[]; imageSize: { width: number; height: number } }) => {
   const { state } = useTransformContext();
   const { scale, positionX, positionY } = state;
   
-  // 내비게이터 고정 너비 (220px)
-  const navWidth = 220; 
+  // 내비게이터 고정 너비 (펼침면이므로 더 넓게 280px)
+  const navWidth = 280; 
   const ratio = imageSize.height / imageSize.width;
   const navHeight = navWidth * ratio;
 
@@ -132,12 +132,19 @@ const Navigator = ({ imagePath, imageSize }: { imagePath: string; imageSize: { w
   const y = (-positionY / (imageSize.height * scale)) * navHeight;
 
   return (
-    <div className="absolute top-24 left-6 z-[100] border-2 border-white/30 rounded-xl overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.5)] bg-zinc-900/80 backdrop-blur-xl animate-in fade-in slide-in-from-left-4 duration-500" style={{ width: navWidth, height: navHeight }}>
+    <div 
+      className="absolute top-24 left-6 z-[100] border-2 border-white/30 rounded-xl overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.5)] bg-zinc-900/80 backdrop-blur-xl animate-in fade-in slide-in-from-left-4 duration-500" 
+      style={{ width: navWidth, height: navHeight }}
+    >
       <div className="absolute top-0 left-0 w-full px-3 py-1.5 bg-black/40 border-b border-white/10 z-10 flex items-center justify-between">
         <span className="text-[10px] font-bold text-white/50 tracking-widest uppercase">Navigator</span>
         <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
       </div>
-      <img src={imagePath} className="w-full h-full object-cover opacity-60" alt="Minimap" />
+      <div className="w-full h-full flex">
+        {imagePath.map((path, idx) => (
+          <img key={idx} src={path} className="h-full object-cover opacity-60 flex-1" alt="Minimap" />
+        ))}
+      </div>
       <div 
         className="absolute border-2 border-red-500 bg-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.5)] transition-all duration-75"
         style={{
@@ -161,7 +168,8 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
   
   // 확대 관련 상태
   const [isZoomMode, setIsZoomMode] = useState(false);
-  const [zoomedPage, setZoomedPage] = useState<PageData | null>(null);
+  const [zoomedSpread, setZoomedSpread] = useState<PageData[] | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
@@ -179,7 +187,7 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
     const handleFsChange = () => setIsFullScreen(!!document.fullscreenElement);
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (zoomedPage) setZoomedPage(null);
+        if (zoomedSpread) setZoomedSpread(null);
         else if (isZoomMode) setIsZoomMode(false);
       }
     };
@@ -189,7 +197,7 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
       document.removeEventListener('fullscreenchange', handleFsChange);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [zoomedPage, isZoomMode]);
+  }, [zoomedSpread, isZoomMode]);
 
   // 화면 크기에 맞게 전자책 크기를 계산하는 함수
   const calculateSize = useCallback(() => {
@@ -262,8 +270,28 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
   const prevButtonClick = () => bookRef.current?.pageFlip().flipPrev();
 
   const handlePageClick = (page: PageData) => {
-    if (isZoomMode) {
-      setZoomedPage(page);
+    if (!isZoomMode) return;
+
+    const pageIdx = page.pageNumber - 1;
+    const total = metadata.totalPages;
+
+    // 첫 페이지(표지)와 마지막 페이지는 확대 제외
+    if (pageIdx === 0 || pageIdx === total - 1) return;
+
+    // 펼침면(Spread) 감지
+    let leftPage, rightPage;
+    if (pageIdx % 2 !== 0) {
+      // 홀수 인덱스(왼쪽 페이지)
+      leftPage = metadata.pages[pageIdx];
+      rightPage = metadata.pages[pageIdx + 1];
+    } else {
+      // 짝수 인덱스(오른쪽 페이지)
+      leftPage = metadata.pages[pageIdx - 1];
+      rightPage = metadata.pages[pageIdx];
+    }
+
+    if (leftPage && rightPage) {
+      setZoomedSpread([leftPage, rightPage]);
     }
   };
 
@@ -350,16 +378,23 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
             showPageCorners={true}
             disableFlipByClick={false}
           >
-            {metadata.pages.map((page) => (
-              <div key={page.pageNumber} onClick={() => handlePageClick(page)} className="cursor-pointer">
-                <Page page={page} onJump={jumpToPage} />
-              </div>
-            ))}
+            {metadata.pages.map((page, idx) => {
+              const isCover = idx === 0 || idx === metadata.totalPages - 1;
+              return (
+                <div 
+                  key={page.pageNumber} 
+                  onClick={() => handlePageClick(page)} 
+                  className={`cursor-pointer ${(isZoomMode && !isCover) ? 'cursor-zoom-plus' : ''}`}
+                >
+                  <Page page={page} onJump={jumpToPage} />
+                </div>
+              );
+            })}
           </HTMLFlipBook>
         </div>
 
         {/* --- Zoom Overlay & Navigator --- */}
-        {zoomedPage && (
+        {zoomedSpread && (
           <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl animate-in fade-in duration-300">
             <TransformWrapper
               initialScale={1.5}
@@ -367,37 +402,35 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
               maxScale={6}
               centerOnInit={true}
               wheel={{ step: 0.2 }}
+              onPanningStart={() => setIsDragging(true)}
+              onPanningStop={() => setTimeout(() => setIsDragging(false), 100)}
             >
               <TransformComponent wrapperClass="!w-screen !h-screen" contentClass="!w-screen !h-screen flex items-center justify-center">
-                <img 
-                  src={zoomedPage.imagePath} 
-                  alt="Zoomed Page" 
-                  className="max-w-none shadow-2xl cursor-grab active:cursor-grabbing"
+                <div 
+                  className="flex max-w-none shadow-2xl cursor-zoom-minus"
+                  onClick={() => !isDragging && setZoomedSpread(null)}
                   style={{ 
-                    width: zoomedPage.width * 2, 
-                    height: zoomedPage.height * 2 
+                    width: zoomedSpread[0].width * 4, // Spread 너비 (2페이지 분량)
+                    height: zoomedSpread[0].height * 2 
                   }}
-                />
+                >
+                  <img src={zoomedSpread[0].imagePath} className="h-full object-contain pointer-events-none" alt="Left" />
+                  <img src={zoomedSpread[1].imagePath} className="h-full object-contain pointer-events-none" alt="Right" />
+                </div>
               </TransformComponent>
               <Navigator 
-                imagePath={zoomedPage.imagePath} 
-                imageSize={{ width: zoomedPage.width * 2, height: zoomedPage.height * 2 }} 
+                imagePath={[zoomedSpread[0].imagePath, zoomedSpread[1].imagePath]} 
+                imageSize={{ width: zoomedSpread[0].width * 4, height: zoomedSpread[0].height * 2 }} 
               />
             </TransformWrapper>
 
             {/* Zoom Controls Overlay */}
-            <div className="absolute top-6 right-6 z-[110] flex items-center gap-3">
+            <div className="absolute top-6 right-6 z-[110] flex items-center gap-3 pointer-events-none">
               <div className="px-4 py-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center gap-4 text-white/50 text-xs font-bold tracking-widest uppercase">
-                <span>Page {zoomedPage.pageNumber}</span>
+                <span>Spread {zoomedSpread[0].pageNumber}-{zoomedSpread[1].pageNumber}</span>
                 <div className="w-px h-3 bg-white/10" />
-                <span>Use Wheel to Zoom / Drag to Pan</span>
+                <span>Click to Exit / Drag to Pan</span>
               </div>
-              <button 
-                onClick={() => setZoomedPage(null)}
-                className="p-3 bg-red-500/20 hover:bg-red-500/40 text-red-400 border border-red-500/30 rounded-2xl transition-all hover:scale-110 active:scale-95"
-              >
-                <X size={24} />
-              </button>
             </div>
           </div>
         )}
@@ -457,6 +490,16 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
         .flipbook-canvas {
           margin: auto;
         }
+        
+        /* Custom Cursors */
+        .cursor-zoom-plus {
+          cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='white' stroke='black' stroke-width='2' opacity='0.9'/%3E%3Cline x1='16' y1='10' x2='16' y2='22' stroke='black' stroke-width='2'/%3E%3Cline x1='10' y1='16' x2='22' y2='16' stroke='black' stroke-width='2'/%3E%3C/svg%3E") 16 16, zoom-in;
+        }
+        
+        .cursor-zoom-minus {
+          cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='white' stroke='black' stroke-width='2' opacity='0.9'/%3E%3Cline x1='10' y1='16' x2='22' y2='16' stroke='black' stroke-width='2'/%3E%3C/svg%3E") 16 16, zoom-out;
+        }
+
         input[type='range']::-webkit-slider-thumb {
           appearance: none;
           width: 16px;
