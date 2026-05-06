@@ -2,6 +2,7 @@
 
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import clsx from 'clsx';
 import HTMLFlipBook from 'react-pageflip';
 import { 
@@ -51,12 +52,13 @@ const Page = React.forwardRef((props: { page: PageData; onJump?: (pageIndex: num
   const { page, onJump } = props;
   return (
     <div className="demoPage bg-white shadow-2xl overflow-hidden relative" ref={ref}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
+      <Image
         src={page.imagePath}
         alt={`Page ${page.pageNumber}`}
-        className="w-full h-full object-contain pointer-events-none select-none"
+        fill
+        className="object-contain pointer-events-none select-none"
         decoding="async"
+        unoptimized
       />
       {page.links.map((link, idx) => {
         const style = {
@@ -175,7 +177,15 @@ const Navigator = ({ imagePath, imageSize }: { imagePath: string[]; imageSize: {
       </div>
       <div className="w-full h-full flex pointer-events-none">
         {imagePath.map((path, idx) => (
-          <img key={idx} src={path} className="h-full object-cover opacity-60 flex-1" alt="Minimap" />
+          <div key={idx} className="relative h-full flex-1">
+            <Image 
+              src={path} 
+              fill
+              className="object-cover opacity-60" 
+              alt="Minimap"
+              unoptimized // 외부 URL 캐싱 문제 방지
+            />
+          </div>
         ))}
       </div>
       <div 
@@ -547,8 +557,26 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
                     height: zoomedSpread[0].height * 2 
                   }}
                 >
-                  <img src={zoomedSpread[0].imagePath} className="h-full object-contain pointer-events-none" alt="Left" />
-                  <img src={zoomedSpread[1].imagePath} className="h-full object-contain pointer-events-none" alt="Right" />
+                  <div className="relative flex-1 h-full">
+                    <Image 
+                      src={zoomedSpread[0].imagePath} 
+                      fill
+                      className="object-contain pointer-events-none" 
+                      alt="Left" 
+                      unoptimized
+                      priority
+                    />
+                  </div>
+                  <div className="relative flex-1 h-full">
+                    <Image 
+                      src={zoomedSpread[1].imagePath} 
+                      fill
+                      className="object-contain pointer-events-none" 
+                      alt="Right" 
+                      unoptimized
+                      priority
+                    />
+                  </div>
                 </div>
               </TransformComponent>
               <div className="navigator-container">
@@ -622,6 +650,7 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
       </div>
 
       <style jsx global>{`
+        /* cspell:disable */
         .flipbook-canvas {
           margin: auto;
         }
