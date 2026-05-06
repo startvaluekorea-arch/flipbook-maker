@@ -162,8 +162,26 @@ const Navigator = ({
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
-    const targetX = (window.innerWidth / 2) - (mouseX / navWidth) * (imageSize.width * scale);
-    const targetY = (window.innerHeight / 2) - (mouseY / navHeight) * (imageSize.height * scale);
+    const { scale } = transformRef.current.state;
+    // 클릭한 지점이 화면 중앙에 오도록 타겟 위치 계산
+    let targetX = (window.innerWidth / 2) - (mouseX / navWidth) * (imageSize.width * scale);
+    let targetY = (window.innerHeight / 2) - (mouseY / navHeight) * (imageSize.height * scale);
+
+    // 이미지가 화면보다 클 경우, 경계를 벗어나지 않도록 클램핑 (검은 배경 방지)
+    const contentWidth = imageSize.width * scale;
+    const contentHeight = imageSize.height * scale;
+
+    if (contentWidth > window.innerWidth) {
+      targetX = Math.min(0, Math.max(targetX, window.innerWidth - contentWidth));
+    } else {
+      targetX = (window.innerWidth - contentWidth) / 2;
+    }
+
+    if (contentHeight > window.innerHeight) {
+      targetY = Math.min(0, Math.max(targetY, window.innerHeight - contentHeight));
+    } else {
+      targetY = (window.innerHeight - contentHeight) / 2;
+    }
 
     transformRef.current.setTransform(targetX, targetY, scale, 0);
   };
