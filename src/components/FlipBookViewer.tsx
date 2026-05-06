@@ -437,6 +437,25 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
               );
             })}
           </HTMLFlipBook>
+
+          {/* Enlarge 모드 활성화 시 기본 넘김 기능을 막는 투명 쉴드 */}
+          {isZoomMode && !zoomedSpread && (
+            <div 
+              className="absolute inset-0 z-[60] cursor-zoom-plus"
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const isLeft = x < rect.width / 2;
+                
+                const visiblePages = getVisiblePages(currentPage);
+                const targetPage = isLeft ? visiblePages[0] : visiblePages[1];
+                
+                if (targetPage) {
+                  handlePageClick(targetPage);
+                }
+              }}
+            />
+          )}
         </div>
 
         {/* --- Zoom Overlay & Navigator --- */}
