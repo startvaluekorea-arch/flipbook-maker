@@ -248,6 +248,92 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
   const [zoomedSpread, setZoomedSpread] = useState<PageData[] | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isClosingZoom, setIsClosingZoom] = useState(false);
+
+  // --- Handlers ---
+  const handlePrint = () => {
+    const pageIndex = bookRef.current?.pageFlip()?.getCurrentPageIndex() ?? 0;
+    let leftPageIdx, rightPageIdx;
+    
+    if (pageIndex % 2 !== 0) {
+      leftPageIdx = pageIndex;
+      rightPageIdx = pageIndex + 1;
+    } else {
+      leftPageIdx = pageIndex - 1;
+      rightPageIdx = pageIndex;
+    }
+
+    const leftPage = metadata.pages[leftPageIdx];
+    const rightPage = metadata.pages[rightPageIdx];
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Print - ${metadata.originalFileName}</title>
+          <style>
+            @page { size: landscape; margin: 0; }
+            body { margin: 0; display: flex; justify-content: center; align-items: center; background: white; }
+            .spread { display: flex; width: 100vw; height: 100vh; }
+            img { width: 50%; height: 100%; object-fit: contain; }
+            @media print {
+              img { width: 50%; height: 100vh; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="spread">
+            \${leftPage ? \`<img src="\${leftPage.imagePath}" />\` : ''}
+            \${rightPage ? \`<img src="\${rightPage.imagePath}" />\` : ''}
+          </div>
+          <script>
+            const imgs = document.querySelectorAll('img');
+            let loaded = 0;
+            if (imgs.length === 0) {
+              window.print();
+              setTimeout(() => window.close(), 500);
+            } else {
+              imgs.forEach(img => {
+                if (img.complete) {
+                  loaded++;
+                  if (loaded === imgs.length) { window.print(); setTimeout(() => window.close(), 500); }
+                } else {
+                  img.onload = () => {
+                    loaded++;
+                    if (loaded === imgs.length) { window.print(); setTimeout(() => window.close(), 500); }
+                  };
+                  img.onerror = () => {
+                    loaded++;
+                    if (loaded === imgs.length) { window.print(); setTimeout(() => window.close(), 500); }
+                  };
+                }
+              });
+            }
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
+
+  const handleDownload = () => {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    if (!supabaseUrl) {
+      alert('다운로드 서버 주소를 찾을 수 없습니다.');
+      return;
+    }
+    
+    const pdfUrl = \`\${supabaseUrl}/storage/v1/object/public/flipbooks/\${metadata.bookId}/original.pdf\`;
+    
+    const link = document.createElement('a');
+    link.href = pdfUrl;
+    link.download = metadata.originalFileName;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
 
   const toggleFullScreen = () => {
@@ -407,9 +493,6 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
               <X size={18} />
             </Link>
             <div className="w-px h-4 bg-white/10 mx-0.5" />
-            <button className="p-1.5 hover:bg-white/10 rounded-lg transition-all" title="Index"><Menu size={16} /></button>
-            <button className="p-1.5 hover:bg-white/10 rounded-lg transition-all" title="Thumbnails"><Layers size={16} /></button>
-            <div className="w-px h-4 bg-white/10 mx-0.5" />
             <button 
               onClick={() => setIsZoomMode(!isZoomMode)}
               className={`p-1.5 rounded-lg transition-all flex items-center gap-1.5 ${isZoomMode ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'hover:bg-white/10 text-white/70'}`} 
@@ -418,8 +501,6 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
               <ZoomIn size={16} />
               <span className="text-[10px] font-bold uppercase tracking-wider hidden lg:inline">Enlarge</span>
             </button>
-            <div className="w-px h-4 bg-white/10 mx-0.5" />
-            <button className="p-1.5 hover:bg-white/10 rounded-lg transition-all" title="Search"><Search size={16} /></button>
           </div>
           
           <div className="hidden md:flex items-center gap-2 text-[13px] font-medium tracking-tight opacity-40 truncate max-w-[200px]">
@@ -427,8 +508,8 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
           </div>
 
           <div className="flex items-center gap-2">
-            <button className="p-1.5 hover:bg-white/10 rounded-lg transition-all" title="Print"><Printer size={16} /></button>
-            <button className="p-1.5 hover:bg-white/10 rounded-lg transition-all" title="Download"><Download size={16} /></button>
+            <button onClick={handlePrint} className="p-1.5 hover:bg-white/10 rounded-lg transition-all" title="Print"><Printer size={16} /></button>
+            <button onClick={handleDownload} className="p-1.5 hover:bg-white/10 rounded-lg transition-all" title="Download"><Download size={16} /></button>
             <button className="p-1.5 hover:bg-white/10 rounded-lg transition-all" title="Share"><Share2 size={16} /></button>
             <div className="w-px h-4 bg-white/10 mx-0.5" />
             <button 
