@@ -127,7 +127,7 @@ const Navigator = ({
 }: { 
   imagePath: string[]; 
   imageSize: { width: number; height: number };
-  transformRef: React.RefObject<ReactZoomPanPinchRef>;
+  transformRef: React.RefObject<ReactZoomPanPinchRef | null>;
 }) => {
   const { state } = useTransformContext();
   const { scale, positionX, positionY } = state;
