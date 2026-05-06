@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useRef, useState, useCallback, useEffect } from 'react';
+import Link from 'next/link';
 import HTMLFlipBook from 'react-pageflip';
 import { 
   ChevronLeft, 
@@ -15,7 +16,8 @@ import {
   Share2, 
   Plus, 
   Minus,
-  Settings
+  Settings,
+  X
 } from 'lucide-react';
 
 interface LinkData {
