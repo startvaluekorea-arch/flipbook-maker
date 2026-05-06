@@ -43,8 +43,7 @@ export default function UploadDropzone() {
 
     try {
       const pdfjs = await import('pdfjs-dist');
-      const workerVersion = pdfjs.version || '5.7.284';
-      pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${workerVersion}/pdf.worker.min.mjs`;
+      pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
       const arrayBuffer = await file.arrayBuffer();
       const pdf = await pdfjs.getDocument({ 
@@ -120,14 +119,10 @@ export default function UploadDropzone() {
         const renderContext = {
           canvasContext: context,
           viewport: viewport,
-          background: 'white',
-          canvas: canvas,
-          annotationMode: 1,
-          renderInteractiveForms: true,
+          intent: 'display',
         };
 
         await page.render(renderContext).promise;
-        await new Promise(resolve => setTimeout(resolve, 50));
 
         // Convert to WebP
         const blob = await new Promise<Blob>((resolve) => {
