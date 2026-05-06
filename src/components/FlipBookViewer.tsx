@@ -419,10 +419,10 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
             ref={bookRef}
             usePortrait={false}
             flippingTime={800}
-            useMouseEvents={!zoomedSpread} // 확대 중에는 마우스 이벤트 차단
+            useMouseEvents={!isZoomMode && !zoomedSpread} // Enlarge 모드 또는 확대 중에는 마우스 이벤트 차단
             swipeDistance={40}
             showPageCorners={true}
-            disableFlipByClick={zoomedSpread !== null} // 확대 중에는 클릭에 의한 넘김 방지
+            disableFlipByClick={isZoomMode || zoomedSpread !== null} // Enlarge 모드 또는 확대 중에는 클릭 넘김 방지
           >
             {metadata.pages.map((page, idx) => {
               const isCover = idx === 0 || idx === metadata.totalPages - 1;
