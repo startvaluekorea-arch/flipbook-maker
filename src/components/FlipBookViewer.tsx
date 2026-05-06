@@ -155,6 +155,7 @@ const Navigator = ({ imagePath, imageSize }: { imagePath: string[]; imageSize: {
   };
 
   const onMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
     handleInteraction(e);
     const moveHandler = (moveEvent: MouseEvent) => {
       handleInteraction(moveEvent as unknown as React.MouseEvent);
@@ -173,6 +174,7 @@ const Navigator = ({ imagePath, imageSize }: { imagePath: string[]; imageSize: {
       className="absolute top-24 left-6 w-[200px] bg-black/80 backdrop-blur-xl border border-white/30 rounded-xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] z-[9999] select-none pointer-events-auto cursor-crosshair"
       style={{ height: navHeight }}
       onMouseDown={onMouseDown}
+      onClick={(e) => e.stopPropagation()}
     >
       <div className="absolute top-0 left-0 w-full px-3 py-2 bg-white/10 border-b border-white/10 z-10 flex items-center justify-between pointer-events-none">
         <span className="text-[10px] font-bold text-white/70 tracking-widest uppercase">Navigator</span>
