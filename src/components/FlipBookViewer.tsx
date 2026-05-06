@@ -146,10 +146,11 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
     
-    // 툴바와 조작바 공간을 더 넉넉하게 예약 (500px)
-    const reservedHeight = 500; 
+    // 툴바와 조작바 공간을 예약 (모바일/데스크톱 분기)
+    const reservedHeight = windowWidth < 768 ? 160 : 220; 
     const availableHeight = Math.max(windowHeight - reservedHeight, 300);
-    const availableWidth = windowWidth - (windowWidth < 768 ? 60 : 300);
+    // 좌우 여백 최적화 (모바일 30px, 데스크톱 120px)
+    const availableWidth = windowWidth - (windowWidth < 768 ? 30 : 120);
 
     const firstPage = metadata.pages[0];
     const pdfAspectRatio = firstPage.width / firstPage.height;
@@ -165,8 +166,8 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
       finalHeight = finalWidth / spreadAspectRatio;
     }
 
-    // [최후의 수단] 축소 비율을 0.4로 극단적으로 낮춤 (절대 잘리지 않게 함)
-    const scaleFactor = 0.4;
+    // 화면 가용 공간의 95%를 활용하여 최대한 크게 표시
+    const scaleFactor = 0.95;
     return {
       width: Math.floor((finalWidth / 2) * scaleFactor),
       height: Math.floor(finalHeight * scaleFactor)
