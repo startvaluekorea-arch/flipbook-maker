@@ -115,8 +115,8 @@ Page.displayName = 'Page';
 
 // --- Navigator (Minimap) Component ---
 const Navigator = ({ imagePath, imageSize }: { imagePath: string; imageSize: { width: number; height: number } }) => {
-  const { transformState } = useTransformContext();
-  const { scale, positionX, positionY } = transformState;
+  const { state } = useTransformContext();
+  const { scale, positionX, positionY } = state;
   
   // 내비게이터 고정 너비 (220px)
   const navWidth = 220; 
