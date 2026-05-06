@@ -9,6 +9,9 @@ export default function Header() {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const pathname = usePathname();
 
+    // 뷰어 페이지에서는 헤더를 숨깁니다.
+    if (pathname?.startsWith('/viewer/')) return null;
+
     const navLinks = [
         { label: "홈", href: "/" },
         { label: "갤러리", href: "/gallery" },
