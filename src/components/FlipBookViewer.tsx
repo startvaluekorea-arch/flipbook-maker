@@ -137,21 +137,19 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
     return () => document.removeEventListener('fullscreenchange', handleFsChange);
   }, []);
 
-  const [bookSize, setBookSize] = useState({ width: 600, height: 800 });
-
   // 화면 크기에 맞게 전자책 크기를 계산하는 함수
-  const updateSize = useCallback(() => {
-    if (!metadata.pages || metadata.pages.length === 0) return;
+  const calculateSize = useCallback(() => {
+    if (typeof window === 'undefined' || !metadata.pages || metadata.pages.length === 0) {
+      return { width: 600, height: 800 };
+    }
 
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
     
-    // 상단 툴바와 하단 컨트롤 패널이 차지하는 공간 예약 (여유 있게 220px 설정)
     const reservedHeight = 220; 
     const availableHeight = windowHeight - reservedHeight;
     const availableWidth = windowWidth - (windowWidth < 768 ? 40 : 120);
 
-    // PDF 비율 유지
     const firstPage = metadata.pages[0];
     const pdfAspectRatio = firstPage.width / firstPage.height;
     const spreadAspectRatio = pdfAspectRatio * 2;
@@ -166,17 +164,20 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
       finalHeight = finalWidth / spreadAspectRatio;
     }
 
-    setBookSize({
+    return {
       width: Math.floor(finalWidth / 2),
       height: Math.floor(finalHeight)
-    });
+    };
   }, [metadata.pages]);
 
+  // 상태 초기화 시점에 즉시 계산하여 useEffect 내 setState 호출 방지
+  const [bookSize, setBookSize] = useState(calculateSize);
+
   useEffect(() => {
-    updateSize();
-    window.addEventListener('resize', updateSize);
-    return () => window.removeEventListener('resize', updateSize);
-  }, [updateSize]);
+    const handleResize = () => setBookSize(calculateSize());
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [calculateSize]);
 
   const onPageFlip = useCallback((e: { data: number }) => {
     setCurrentPage(e.data);
