@@ -156,6 +156,21 @@ export default function UploadDropzone() {
         });
       }
 
+      // 1.5 Upload original PDF
+      setStatus('원본 PDF 업로드 중...');
+      const { error: pdfUploadError } = await supabase.storage
+        .from('flipbooks')
+        .upload(`${bookId}/images/original.pdf`, file, {
+          contentType: 'application/pdf',
+          upsert: true
+        });
+
+      if (pdfUploadError) {
+        console.error('PDF upload error:', pdfUploadError);
+        alert(`PDF 업로드 중 오류가 발생했습니다: ${pdfUploadError.message}`);
+        // Continue even if PDF fails, but at least we'll know why
+      }
+
       setStatus('서버에 정보 저장 중...');
       setProgress(90);
 

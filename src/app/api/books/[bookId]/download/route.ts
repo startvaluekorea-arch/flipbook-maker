@@ -8,7 +8,7 @@ export async function GET(
   try {
     const { bookId } = await params;
     
-    const filePath = `${bookId}/original.pdf`;
+    const filePath = `${bookId}/images/original.pdf`;
 
     const { data } = supabase.storage
       .from('flipbooks')
