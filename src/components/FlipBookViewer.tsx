@@ -204,6 +204,7 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
   const [zoomedSpread, setZoomedSpread] = useState<PageData[] | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isClosingZoom, setIsClosingZoom] = useState(false);
+  const [startPos, setStartPos] = useState({ x: 0, y: 0 });
 
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
@@ -445,9 +446,20 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
               "fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl animate-in fade-in duration-300",
               isDragging ? "cursor-grabbing" : "cursor-zoom-minus"
             )}
-            onClick={(e) => {
-              // 배경(검은 영역) 클릭 시 종료
-              if (!isDragging) {
+            onMouseDown={(e) => {
+              if ((e.target as HTMLElement).closest('.navigator-container')) return;
+              setStartPos({ x: e.clientX, y: e.clientY });
+            }}
+            onMouseUp={(e) => {
+              if ((e.target as HTMLElement).closest('.navigator-container')) return;
+              
+              // 이동 거리 계산 (VisitKorea 방식: 픽셀 기준)
+              const deltaX = Math.abs(e.clientX - startPos.x);
+              const deltaY = Math.abs(e.clientY - startPos.y);
+              const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+              // 5px 미만 이동 시 클릭으로 간주하여 종료
+              if (distance < 5) {
                 setIsClosingZoom(true);
                 setZoomedSpread(null);
                 setIsZoomMode(false);
@@ -476,10 +488,19 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
               >
                 <div 
                   className="flex max-w-none shadow-2xl pointer-events-auto"
-                  onClick={(e) => {
+                  onMouseDown={(e) => {
+                    // 이벤트 전파 차단하여 TransformWrapper의 드래그와 충돌 방지
                     e.stopPropagation();
-                    // 이미지 영역 클릭 시 종료
-                    if (!isDragging) {
+                    setStartPos({ x: e.clientX, y: e.clientY });
+                  }}
+                  onMouseUp={(e) => {
+                    e.stopPropagation();
+                    const deltaX = Math.abs(e.clientX - startPos.x);
+                    const deltaY = Math.abs(e.clientY - startPos.y);
+                    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+                    // 이미지 영역에서도 5px 미만 이동 시 클릭 종료
+                    if (distance < 5) {
                       setIsClosingZoom(true);
                       setZoomedSpread(null);
                       setIsZoomMode(false);
