@@ -439,19 +439,15 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
             )}
             onMouseDown={(e) => {
               if ((e.target as HTMLElement).closest('.navigator-container')) return;
+              e.stopPropagation();
               setMouseDownTime(Date.now());
             }}
             onMouseUp={(e) => {
-              if ((e.target as HTMLElement).closest('.navigator-container')) return;
-              const duration = Date.now() - mouseDownTime;
-              // 1초 이내의 클릭이고 드래그 중이 아니면 즉시 종료
-              if (duration < 1000 && !isDragging) {
-                setTimeout(() => setZoomedSpread(null), 10);
-              }
+              e.stopPropagation();
             }}
             onClick={(e) => {
-              e.preventDefault();
               e.stopPropagation();
+              e.preventDefault();
             }}
             onDoubleClick={(e) => e.stopPropagation()}
           >
@@ -461,8 +457,15 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
               maxScale={6}
               centerOnInit={true}
               wheel={{ step: 0.2 }}
-              doubleClick={{ disabled: true }} // 더블 클릭 방지하여 싱글 클릭 반응성 향상
+              doubleClick={{ disabled: true }}
               limitToBounds={false}
+              onClicked={() => {
+                // 드래그 중이 아니면 즉시 종료
+                if (!isDragging) {
+                  setZoomedSpread(null);
+                  setIsZoomMode(false); // 전체 Enlarge 모드도 함께 종료
+                }
+              }}
               onPanningStart={() => setIsDragging(true)}
               onPanningStop={() => setTimeout(() => setIsDragging(false), 100)}
             >
