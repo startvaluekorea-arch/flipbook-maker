@@ -554,7 +554,7 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
               wheel={{ step: 0.2 }}
               doubleClick={{ disabled: true }}
               limitToBounds={true}
-              panning={{ bounce: false, velocityDisabled: true }}
+              panning={{ velocityDisabled: true }}
               alignmentAnimation={{ disabled: true }}
               onPanningStart={() => setIsDragging(true)}
               onPanningStop={() => {
