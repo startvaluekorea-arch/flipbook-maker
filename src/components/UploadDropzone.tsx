@@ -63,7 +63,7 @@ export default function UploadDropzone() {
         setProgress(Math.round((i / totalPages) * 50)); // 50% for parsing
 
         const page = await pdf.getPage(i);
-        const scale = 4.0; // Maximum resolution for best quality
+        const scale = 2.0; // Optimized for stability and good quality
         const viewport = page.getViewport({ scale });
 
         // Extract Links
@@ -107,10 +107,15 @@ export default function UploadDropzone() {
         canvas.width = viewport.width;
         canvas.height = viewport.height;
 
+        // Fill background with white to prevent transparency issues
+        context.fillStyle = '#ffffff';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+
         // @ts-expect-error - pdfjs-dist typing requires canvas but canvasContext works
         await page.render({
           canvasContext: context,
           viewport: viewport,
+          intent: 'print', // Use print intent to ensure all elements are rendered
         }).promise;
 
         // Convert to WebP
