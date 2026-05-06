@@ -489,17 +489,18 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
                 <div 
                   className="flex max-w-none shadow-2xl pointer-events-auto"
                   onMouseDown={(e) => {
-                    // 이벤트 전파 차단하여 TransformWrapper의 드래그와 충돌 방지
-                    e.stopPropagation();
+                    // 드래그를 위해 전파는 허용하되 시작 좌표만 저장
                     setStartPos({ x: e.clientX, y: e.clientY });
                   }}
                   onMouseUp={(e) => {
-                    e.stopPropagation();
+                    // Navigator 영역은 제외
+                    if ((e.target as HTMLElement).closest('.navigator-container')) return;
+                    
                     const deltaX = Math.abs(e.clientX - startPos.x);
                     const deltaY = Math.abs(e.clientY - startPos.y);
                     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
-                    // 이미지 영역에서도 5px 미만 이동 시 클릭 종료
+                    // 5px 미만 이동 시 클릭 종료
                     if (distance < 5) {
                       setIsClosingZoom(true);
                       setZoomedSpread(null);
