@@ -127,7 +127,8 @@ const Navigator = ({
 }: { 
   imagePath: string[]; 
   imageSize: { width: number; height: number };
-  transformRef: React.RefObject<ReactZoomPanPinchRef | null>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  transformRef: React.RefObject<any>;
 }) => {
   const { state } = useTransformContext();
   const { scale, positionX, positionY } = state;
@@ -209,6 +210,7 @@ const Navigator = ({
       </div>
       <div className="w-full h-full flex pointer-events-none">
         {imagePath.map((path, idx) => (
+          /* eslint-disable-next-line @next/next/no-img-element */
           <img key={idx} src={path} className="h-full object-cover opacity-50 flex-1" alt="Minimap" />
         ))}
       </div>
