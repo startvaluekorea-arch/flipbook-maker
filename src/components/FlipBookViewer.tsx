@@ -168,10 +168,10 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
   return (
     <div 
       ref={containerRef}
-      className={`flex flex-col w-screen min-h-screen transition-all duration-500 ${isFullScreen ? 'bg-black p-0' : 'bg-zinc-950 pt-6 pb-6'}`}
+      className={`flex flex-col w-screen min-h-screen transition-all duration-500 ${isFullScreen ? 'bg-black p-0' : 'bg-zinc-950 pt-2 pb-4'}`}
     >
       {/* --- Top Utility Toolbar (Fixed height) --- */}
-      <div className="flex-none w-full max-w-7xl mx-auto px-4 py-2 z-30">
+      <div className="flex-none w-full max-w-7xl mx-auto px-4 py-1 z-30">
         <div className="flex items-center justify-between px-6 py-2 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl text-white">
           <div className="flex items-center gap-3">
             <Link href="/gallery" className="p-2 hover:bg-red-500/20 text-red-400 rounded-lg transition-all" title="Exit to Gallery">
@@ -205,7 +205,7 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
       </div>
 
       {/* --- Main Viewer Section (Fills remaining space) --- */}
-      <div className="flex-1 relative w-full flex justify-center items-center px-4 md:px-12 py-4 overflow-hidden min-h-[500px] max-h-[calc(100vh-240px)]">
+      <div className="flex-1 relative w-full flex justify-center items-center px-4 md:px-12 pt-0 pb-2 overflow-hidden min-h-[500px] max-h-[calc(100vh-190px)]">
         {/* Navigation Buttons (Floating) --- Now positioned slightly differently to avoid edge clipping */}
         <button
           onClick={prevButtonClick}
