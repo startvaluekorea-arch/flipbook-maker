@@ -140,16 +140,16 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
   // 화면 크기에 맞게 전자책 크기를 계산하는 함수
   const calculateSize = useCallback(() => {
     if (typeof window === 'undefined' || !metadata.pages || metadata.pages.length === 0) {
-      return { width: 600, height: 800 };
+      return { width: 400, height: 550 };
     }
 
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
     
-    // 예약 공간을 훨씬 더 크게 잡아 책 크기를 확실히 줄임 (잘림 방지)
-    const reservedHeight = 450; 
-    const availableHeight = windowHeight - reservedHeight;
-    const availableWidth = windowWidth - (windowWidth < 768 ? 80 : 250);
+    // 툴바와 조작바 공간을 더 넉넉하게 예약 (500px)
+    const reservedHeight = 500; 
+    const availableHeight = Math.max(windowHeight - reservedHeight, 300);
+    const availableWidth = windowWidth - (windowWidth < 768 ? 60 : 300);
 
     const firstPage = metadata.pages[0];
     const pdfAspectRatio = firstPage.width / firstPage.height;
@@ -165,10 +165,10 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
       finalHeight = finalWidth / spreadAspectRatio;
     }
 
-    // 최종 계산된 크기에서 15%를 더 줄여서 어떤 상황에서도 잘리지 않게 함
+    // 최종 크기에서 25%를 더 축소하여 절대 잘리지 않도록 함
     return {
-      width: Math.floor((finalWidth / 2) * 0.85),
-      height: Math.floor(finalHeight * 0.85)
+      width: Math.floor((finalWidth / 2) * 0.75),
+      height: Math.floor(finalHeight * 0.75)
     };
   }, [metadata.pages]);
 
