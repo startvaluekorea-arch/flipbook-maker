@@ -17,8 +17,10 @@ import {
   Plus, 
   Minus,
   Settings,
-  X
+  X,
+  ZoomIn
 } from 'lucide-react';
+import { TransformWrapper, TransformComponent, useTransformContext } from 'react-zoom-pan-pinch';
 
 interface LinkData {
   url?: string;
@@ -111,6 +113,44 @@ const Page = React.forwardRef((props: { page: PageData; onJump?: (pageIndex: num
 });
 Page.displayName = 'Page';
 
+// --- Navigator (Minimap) Component ---
+const Navigator = ({ imagePath, imageSize }: { imagePath: string; imageSize: { width: number; height: number } }) => {
+  const { transformState } = useTransformContext();
+  const { scale, positionX, positionY } = transformState;
+  
+  // 내비게이터 고정 너비 (220px)
+  const navWidth = 220; 
+  const ratio = imageSize.height / imageSize.width;
+  const navHeight = navWidth * ratio;
+
+  // 화면 크기 대비 가시 영역(빨간 상자) 크기 계산
+  const viewWidth = (window.innerWidth / (imageSize.width * scale)) * navWidth;
+  const viewHeight = (window.innerHeight / (imageSize.height * scale)) * navHeight;
+  
+  // 패닝 위치에 따른 상자 위치 계산 (이미지 중심 기준 오프셋 보정 필요할 수 있음)
+  const x = (-positionX / (imageSize.width * scale)) * navWidth;
+  const y = (-positionY / (imageSize.height * scale)) * navHeight;
+
+  return (
+    <div className="absolute top-24 left-6 z-[100] border-2 border-white/30 rounded-xl overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.5)] bg-zinc-900/80 backdrop-blur-xl animate-in fade-in slide-in-from-left-4 duration-500" style={{ width: navWidth, height: navHeight }}>
+      <div className="absolute top-0 left-0 w-full px-3 py-1.5 bg-black/40 border-b border-white/10 z-10 flex items-center justify-between">
+        <span className="text-[10px] font-bold text-white/50 tracking-widest uppercase">Navigator</span>
+        <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+      </div>
+      <img src={imagePath} className="w-full h-full object-cover opacity-60" alt="Minimap" />
+      <div 
+        className="absolute border-2 border-red-500 bg-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.5)] transition-all duration-75"
+        style={{
+          width: Math.min(viewWidth, navWidth),
+          height: Math.min(viewHeight, navHeight),
+          left: Math.max(0, Math.min(x, navWidth - viewWidth)),
+          top: Math.max(0, Math.min(y, navHeight - viewHeight)),
+        }}
+      />
+    </div>
+  );
+};
+
 export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const bookRef = useRef<any>(null);
@@ -118,6 +158,10 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
   const [currentPage, setCurrentPage] = useState(0);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [pageInputValue, setPageInputValue] = useState('1');
+  
+  // 확대 관련 상태
+  const [isZoomMode, setIsZoomMode] = useState(false);
+  const [zoomedPage, setZoomedPage] = useState<PageData | null>(null);
 
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
@@ -133,9 +177,19 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
 
   useEffect(() => {
     const handleFsChange = () => setIsFullScreen(!!document.fullscreenElement);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (zoomedPage) setZoomedPage(null);
+        else if (isZoomMode) setIsZoomMode(false);
+      }
+    };
     document.addEventListener('fullscreenchange', handleFsChange);
-    return () => document.removeEventListener('fullscreenchange', handleFsChange);
-  }, []);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFsChange);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [zoomedPage, isZoomMode]);
 
   // 화면 크기에 맞게 전자책 크기를 계산하는 함수
   const calculateSize = useCallback(() => {
@@ -207,6 +261,12 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
   const nextButtonClick = () => bookRef.current?.pageFlip().flipNext();
   const prevButtonClick = () => bookRef.current?.pageFlip().flipPrev();
 
+  const handlePageClick = (page: PageData) => {
+    if (isZoomMode) {
+      setZoomedPage(page);
+    }
+  };
+
   return (
     <div 
       ref={containerRef}
@@ -222,6 +282,15 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
             <div className="w-px h-4 bg-white/10 mx-0.5" />
             <button className="p-1.5 hover:bg-white/10 rounded-lg transition-all" title="Index"><Menu size={16} /></button>
             <button className="p-1.5 hover:bg-white/10 rounded-lg transition-all" title="Thumbnails"><Layers size={16} /></button>
+            <div className="w-px h-4 bg-white/10 mx-0.5" />
+            <button 
+              onClick={() => setIsZoomMode(!isZoomMode)}
+              className={`p-1.5 rounded-lg transition-all flex items-center gap-1.5 ${isZoomMode ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'hover:bg-white/10 text-white/70'}`} 
+              title="Enlarge Mode"
+            >
+              <ZoomIn size={16} />
+              <span className="text-[10px] font-bold uppercase tracking-wider hidden lg:inline">Enlarge</span>
+            </button>
             <div className="w-px h-4 bg-white/10 mx-0.5" />
             <button className="p-1.5 hover:bg-white/10 rounded-lg transition-all" title="Search"><Search size={16} /></button>
           </div>
@@ -282,10 +351,56 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
             disableFlipByClick={false}
           >
             {metadata.pages.map((page) => (
-              <Page key={page.pageNumber} page={page} onJump={jumpToPage} />
+              <div key={page.pageNumber} onClick={() => handlePageClick(page)} className="cursor-pointer">
+                <Page page={page} onJump={jumpToPage} />
+              </div>
             ))}
           </HTMLFlipBook>
         </div>
+
+        {/* --- Zoom Overlay & Navigator --- */}
+        {zoomedPage && (
+          <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl animate-in fade-in duration-300">
+            <TransformWrapper
+              initialScale={1.5}
+              minScale={1}
+              maxScale={6}
+              centerOnInit={true}
+              wheel={{ step: 0.2 }}
+            >
+              <TransformComponent wrapperClass="!w-screen !h-screen" contentClass="!w-screen !h-screen flex items-center justify-center">
+                <img 
+                  src={zoomedPage.imagePath} 
+                  alt="Zoomed Page" 
+                  className="max-w-none shadow-2xl cursor-grab active:cursor-grabbing"
+                  style={{ 
+                    width: zoomedPage.width * 2, 
+                    height: zoomedPage.height * 2 
+                  }}
+                />
+              </TransformComponent>
+              <Navigator 
+                imagePath={zoomedPage.imagePath} 
+                imageSize={{ width: zoomedPage.width * 2, height: zoomedPage.height * 2 }} 
+              />
+            </TransformWrapper>
+
+            {/* Zoom Controls Overlay */}
+            <div className="absolute top-6 right-6 z-[110] flex items-center gap-3">
+              <div className="px-4 py-2 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center gap-4 text-white/50 text-xs font-bold tracking-widest uppercase">
+                <span>Page {zoomedPage.pageNumber}</span>
+                <div className="w-px h-3 bg-white/10" />
+                <span>Use Wheel to Zoom / Drag to Pan</span>
+              </div>
+              <button 
+                onClick={() => setZoomedPage(null)}
+                className="p-3 bg-red-500/20 hover:bg-red-500/40 text-red-400 border border-red-500/30 rounded-2xl transition-all hover:scale-110 active:scale-95"
+              >
+                <X size={24} />
+              </button>
+            </div>
+          </div>
+        )}
 
         <button
           onClick={nextButtonClick}
