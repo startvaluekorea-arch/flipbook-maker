@@ -124,19 +124,10 @@ const Navigator = ({
   imageSize: { width: number; height: number };
   transformRef: React.RefObject<any>;
 }) => {
-  const navRef = useRef<HTMLDivElement>(null);
-  const [, forceUpdate] = useState({});
-
-  useEffect(() => {
-    // TransformWrapper의 상태 변화를 감지하기 위해 주기적으로 업데이트 (또는 이벤트 리스너 활용)
-    const interval = setInterval(() => forceUpdate({}), 50);
-    return () => clearInterval(interval);
-  }, []);
-
-  if (!transformRef.current) return null;
-
-  const { state } = transformRef.current;
+  const { state } = useTransformContext();
   const { scale, positionX, positionY } = state;
+  const navRef = useRef<HTMLDivElement>(null);
+  
   const navWidth = 200; 
   const ratio = imageSize.height / imageSize.width;
   const navHeight = navWidth * ratio;
@@ -162,7 +153,6 @@ const Navigator = ({
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
-    const { scale } = transformRef.current.state;
     // 클릭한 지점이 화면 중앙에 오도록 타겟 위치 계산
     let targetX = (window.innerWidth / 2) - (mouseX / navWidth) * (imageSize.width * scale);
     let targetY = (window.innerHeight / 2) - (mouseY / navHeight) * (imageSize.height * scale);
