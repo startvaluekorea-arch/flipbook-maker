@@ -450,16 +450,18 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
               if ((e.target as HTMLElement).closest('.navigator-container')) return;
               setStartPos({ x: e.clientX, y: e.clientY });
             }}
-            onMouseUp={(e) => {
+            onClick={(e) => {
               if ((e.target as HTMLElement).closest('.navigator-container')) return;
               
-              // 이동 거리 계산 (VisitKorea 방식: 픽셀 기준)
+              // 이동 거리 계산
               const deltaX = Math.abs(e.clientX - startPos.x);
               const deltaY = Math.abs(e.clientY - startPos.y);
               const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
               // 5px 미만 이동 시 클릭으로 간주하여 종료
               if (distance < 5) {
+                e.stopPropagation();
+                e.preventDefault();
                 setIsClosingZoom(true);
                 setZoomedSpread(null);
                 setIsZoomMode(false);
@@ -492,9 +494,10 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
                     // 드래그를 위해 전파는 허용하되 시작 좌표만 저장
                     setStartPos({ x: e.clientX, y: e.clientY });
                   }}
-                  onMouseUp={(e) => {
-                    // Navigator 영역은 제외
-                    if ((e.target as HTMLElement).closest('.navigator-container')) return;
+                  onClick={(e) => {
+                    // 이벤트 전파 차단하여 배경 FlipBook 보호
+                    e.stopPropagation();
+                    e.preventDefault();
                     
                     const deltaX = Math.abs(e.clientX - startPos.x);
                     const deltaY = Math.abs(e.clientY - startPos.y);
