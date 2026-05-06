@@ -146,9 +146,10 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
     const windowWidth = window.innerWidth;
     const windowHeight = window.innerHeight;
     
-    const reservedHeight = 220; 
+    // 가용 공간을 더 보수적으로 잡아 책 크기를 줄임 (사용자 요청 반영)
+    const reservedHeight = 350; 
     const availableHeight = windowHeight - reservedHeight;
-    const availableWidth = windowWidth - (windowWidth < 768 ? 40 : 120);
+    const availableWidth = windowWidth - (windowWidth < 768 ? 60 : 200);
 
     const firstPage = metadata.pages[0];
     const pdfAspectRatio = firstPage.width / firstPage.height;
@@ -292,8 +293,8 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
       </div>
 
       {/* --- Bottom Navigation Control Panel (Fixed height) --- */}
-      <div className="flex-none w-full max-w-4xl mx-auto px-4 py-6 z-30">
-        <div className="flex flex-col gap-3 p-5 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl text-white">
+      <div className="flex-none w-full max-w-3xl mx-auto px-4 py-2 z-30">
+        <div className="flex flex-col gap-2 p-4 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl text-white">
           {/* Slider */}
           <div className="w-full px-2">
             <input 
