@@ -134,6 +134,14 @@ const Navigator = ({
   const { scale, positionX, positionY } = state;
   const navRef = useRef<HTMLDivElement>(null);
   
+  // 상태 변화가 감지되도록 더미 상태 추가 (onTransformed에서 호출될 예정)
+  const [, forceUpdate] = useState({});
+  useEffect(() => {
+    // 인스턴스가 바뀔 때마다 감시하기 위해 주기적 체크 병행
+    const interval = setInterval(() => forceUpdate({}), 30);
+    return () => clearInterval(interval);
+  }, []);
+
   const navWidth = 200; 
   const ratio = imageSize.height / imageSize.width;
   const navHeight = navWidth * ratio;
@@ -163,7 +171,6 @@ const Navigator = ({
     let targetX = (window.innerWidth / 2) - (mouseX / navWidth) * (imageSize.width * scale);
     let targetY = (window.innerHeight / 2) - (mouseY / navHeight) * (imageSize.height * scale);
 
-    // 이미지가 화면보다 클 경우, 경계를 벗어나지 않도록 클램핑 (검은 배경 방지)
     const contentWidth = imageSize.width * scale;
     const contentHeight = imageSize.height * scale;
 
@@ -547,6 +554,8 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
               wheel={{ step: 0.2 }}
               doubleClick={{ disabled: true }}
               limitToBounds={true}
+              panning={{ bounce: false, velocityDisabled: true }}
+              alignmentAnimation={{ disabled: true }}
               onPanningStart={() => setIsDragging(true)}
               onPanningStop={() => {
                 // 클릭 이벤트가 발생할 시간을 벌어주기 위해 약간의 지연 후 상태 해제
