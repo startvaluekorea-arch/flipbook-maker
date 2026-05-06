@@ -21,7 +21,12 @@ import {
   X,
   ZoomIn
 } from 'lucide-react';
-import { TransformWrapper, TransformComponent, useTransformContext } from 'react-zoom-pan-pinch';
+import { 
+  TransformWrapper, 
+  TransformComponent, 
+  useTransformContext,
+  ReactZoomPanPinchRef 
+} from 'react-zoom-pan-pinch';
 
 interface LinkData {
   url?: string;
@@ -122,7 +127,7 @@ const Navigator = ({
 }: { 
   imagePath: string[]; 
   imageSize: { width: number; height: number };
-  transformRef: React.RefObject<any>;
+  transformRef: React.RefObject<ReactZoomPanPinchRef>;
 }) => {
   const { state } = useTransformContext();
   const { scale, positionX, positionY } = state;
@@ -224,7 +229,7 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const bookRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const transformRef = useRef<any>(null);
+  const transformRef = useRef<ReactZoomPanPinchRef>(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [pageInputValue, setPageInputValue] = useState('1');
@@ -578,7 +583,9 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
                     height: zoomedSpread[0].height * 1 
                   }}
                 >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={zoomedSpread[0].imagePath} className="w-1/2 h-full object-cover pointer-events-none" alt="Left" />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={zoomedSpread[1].imagePath} className="w-1/2 h-full object-cover pointer-events-none" alt="Right" />
                 </div>
               </TransformComponent>
