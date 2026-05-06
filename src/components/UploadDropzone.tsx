@@ -42,10 +42,12 @@ export default function UploadDropzone() {
     setProgress(0);
 
     try {
+      console.log('PDF processing started...');
       const pdfjs = await import('pdfjs-dist');
-      pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
+      pdfjs.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.mjs';
 
       const arrayBuffer = await file.arrayBuffer();
+      console.log('PDF document loading...');
       const pdf = await pdfjs.getDocument({ 
         data: arrayBuffer,
         cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
@@ -116,13 +118,16 @@ export default function UploadDropzone() {
         context.fillStyle = '#ffffff';
         context.fillRect(0, 0, canvas.width, canvas.height);
 
+        // @ts-expect-error - pdfjs-dist v4 types
         const renderContext = {
           canvasContext: context,
           viewport: viewport,
           intent: 'display',
+          renderInteractiveForms: true,
         };
 
         await page.render(renderContext).promise;
+        console.log(`Rendered page ${i} successfully`);
 
         // Convert to WebP
         const blob = await new Promise<Blob>((resolve) => {
