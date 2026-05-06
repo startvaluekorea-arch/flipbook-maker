@@ -170,21 +170,21 @@ const Navigator = ({ imagePath, imageSize }: { imagePath: string[]; imageSize: {
   return (
     <div 
       ref={navRef}
-      className="absolute top-24 left-6 w-[180px] bg-black/60 backdrop-blur-xl border border-white/20 rounded-xl overflow-hidden shadow-2xl z-[110] select-none pointer-events-auto"
+      className="absolute top-24 left-6 w-[200px] bg-black/80 backdrop-blur-xl border border-white/30 rounded-xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] z-[9999] select-none pointer-events-auto cursor-crosshair"
       style={{ height: navHeight }}
       onMouseDown={onMouseDown}
     >
-      <div className="absolute top-0 left-0 w-full px-3 py-1.5 bg-black/40 border-b border-white/10 z-10 flex items-center justify-between pointer-events-none">
-        <span className="text-[10px] font-bold text-white/50 tracking-widest uppercase">Navigator</span>
-        <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+      <div className="absolute top-0 left-0 w-full px-3 py-2 bg-white/10 border-b border-white/10 z-10 flex items-center justify-between pointer-events-none">
+        <span className="text-[10px] font-bold text-white/70 tracking-widest uppercase">Navigator</span>
+        <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
       </div>
       <div className="w-full h-full flex pointer-events-none">
         {imagePath.map((path, idx) => (
-          <img key={idx} src={path} className="h-full object-cover opacity-60 flex-1" alt="Minimap" />
+          <img key={idx} src={path} className="h-full object-cover opacity-50 flex-1" alt="Minimap" />
         ))}
       </div>
       <div 
-        className="absolute border-2 border-red-500 bg-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.5)] transition-all duration-75 pointer-events-none"
+        className="absolute border-2 border-red-500 bg-red-500/10 shadow-[0_0_20px_rgba(239,68,68,0.4)] transition-none pointer-events-none"
         style={{
           width: w,
           height: h,
@@ -507,13 +507,13 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
             onDoubleClick={(e) => e.stopPropagation()}
           >
             <TransformWrapper
-              initialScale={1}
+              initialScale={1.2}
               minScale={1}
               maxScale={6}
               centerOnInit={true}
               wheel={{ step: 0.2 }}
               doubleClick={{ disabled: true }}
-              limitToBounds={false}
+              limitToBounds={true}
               onPanningStart={() => setIsDragging(true)}
               onPanningStop={() => {
                 // 클릭 이벤트가 발생할 시간을 벌어주기 위해 약간의 지연 후 상태 해제
