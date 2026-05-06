@@ -446,10 +446,14 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
               if ((e.target as HTMLElement).closest('.navigator-container')) return;
               // 250ms 미만이고 드래그가 거의 없으면 클릭으로 간주하여 축소
               if (Date.now() - mouseDownTime < 250 && !isDragging) {
-                setZoomedSpread(null);
+                // 레이스 컨디션 방지: 아주 짧은 지연을 주어 배경의 클릭 이벤트를 무시하게 함
+                setTimeout(() => setZoomedSpread(null), 50);
               }
             }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
             onDoubleClick={(e) => e.stopPropagation()}
           >
             <TransformWrapper
