@@ -20,8 +20,19 @@ export async function GET(
       return new NextResponse('Not Found', { status: 404 });
     }
 
-    // Redirect to the actual Supabase Storage URL
-    return NextResponse.redirect(data.publicUrl);
+    // Proxy the image content instead of redirecting
+    const response = await fetch(data.publicUrl);
+    if (!response.ok) {
+      return new NextResponse('Image not found in storage', { status: 404 });
+    }
+
+    const blob = await response.blob();
+    return new NextResponse(blob, {
+      headers: {
+        'Content-Type': response.headers.get('Content-Type') || 'image/webp',
+        'Cache-Control': 'public, max-age=31536000, immutable',
+      },
+    });
   } catch (error) {
     console.error('Error serving image:', error);
     return new NextResponse('Internal Server Error', { status: 500 });

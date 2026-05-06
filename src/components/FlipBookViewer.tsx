@@ -272,6 +272,7 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
       <html>
         <head>
           <title>Print - ${metadata.originalFileName}</title>
+          <base href="${window.location.origin}" />
           <style>
             @page { size: landscape; margin: 0; }
             body { margin: 0; display: flex; justify-content: center; align-items: center; background: white; }
@@ -284,8 +285,8 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
         </head>
         <body>
           <div class="spread">
-            ${leftPage ? `<img src="${leftPage.imagePath.startsWith('http') ? leftPage.imagePath : (window.location.origin + leftPage.imagePath)}" />` : ''}
-            ${rightPage ? `<img src="${rightPage.imagePath.startsWith('http') ? rightPage.imagePath : (window.location.origin + rightPage.imagePath)}" />` : ''}
+            ${leftPage ? `<img src="${leftPage.imagePath}" />` : ''}
+            ${rightPage ? `<img src="${rightPage.imagePath}" />` : ''}
           </div>
           <script>
             const imgs = document.querySelectorAll('img');
