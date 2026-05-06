@@ -165,10 +165,11 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
       finalHeight = finalWidth / spreadAspectRatio;
     }
 
-    // 최종 크기에서 25%를 더 축소하여 절대 잘리지 않도록 함
+    // [초강력 조치] 축소 비율을 0.6으로 낮춰 화면 중앙에 아주 넉넉하게 배치 (잘림 절대 방지)
+    const scaleFactor = 0.6;
     return {
-      width: Math.floor((finalWidth / 2) * 0.75),
-      height: Math.floor(finalHeight * 0.75)
+      width: Math.floor((finalWidth / 2) * scaleFactor),
+      height: Math.floor(finalHeight * scaleFactor)
     };
   }, [metadata.pages]);
 
@@ -258,6 +259,7 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
         <div className="w-full h-full max-w-full max-h-full flex justify-center items-center overflow-hidden">
           {/* @ts-expect-error - react-pageflip typings */}
           <HTMLFlipBook
+            key={`${bookSize.width}-${bookSize.height}`}
             width={bookSize.width}
             height={bookSize.height}
             size="stretch"
