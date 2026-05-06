@@ -7,10 +7,7 @@ import HTMLFlipBook from 'react-pageflip';
 import { 
   ChevronLeft, 
   ChevronRight, 
-  Menu, 
-  Layers, 
   Printer, 
-  Search, 
   Maximize, 
   Minimize, 
   Download, 
@@ -52,7 +49,7 @@ interface FlipBookViewerProps {
   };
 }
 
-const Page = React.forwardRef((props: { page: PageData; onJump?: (pageIndex: number) => void }, ref: React.Ref<HTMLDivElement>) => {
+const Page = React.memo(React.forwardRef((props: { page: PageData; onJump?: (pageIndex: number) => void }, ref: React.Ref<HTMLDivElement>) => {
   const { page, onJump } = props;
   return (
     <div className="demoPage bg-white shadow-2xl overflow-hidden relative" ref={ref}>
@@ -116,7 +113,7 @@ const Page = React.forwardRef((props: { page: PageData; onJump?: (pageIndex: num
       })}
     </div>
   );
-});
+}));
 Page.displayName = 'Page';
 
 // --- Navigator (Minimap) Component ---

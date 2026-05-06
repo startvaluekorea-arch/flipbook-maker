@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation';
 import FlipBookViewer from '@/components/FlipBookViewer';
-import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 
 export default async function ViewerPage({ params }: { params: Promise<{ bookId: string }> }) {
