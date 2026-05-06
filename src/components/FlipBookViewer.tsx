@@ -203,6 +203,7 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
   const [isZoomMode, setIsZoomMode] = useState(false);
   const [zoomedSpread, setZoomedSpread] = useState<PageData[] | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isClosingZoom, setIsClosingZoom] = useState(false);
 
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
@@ -220,26 +221,23 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
     const handleFsChange = () => setIsFullScreen(!!document.fullscreenElement);
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (zoomedSpread) setZoomedSpread(null);
-        else if (isZoomMode) setIsZoomMode(false);
-      }
-    };
-
-    // 확대 모드 중 배경 클릭 차단을 위한 캡처링 리스너 (강력한 차단)
-    const blockClick = (e: MouseEvent) => {
-      if (zoomedSpread) {
-        e.stopPropagation();
+        if (zoomedSpread) {
+          setIsClosingZoom(true);
+          setZoomedSpread(null);
+          setIsZoomMode(false);
+          setTimeout(() => setIsClosingZoom(false), 300);
+        } else if (isZoomMode) {
+          setIsZoomMode(false);
+        }
       }
     };
 
     document.addEventListener('fullscreenchange', handleFsChange);
     document.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('click', blockClick, true); // Capture phase
 
     return () => {
       document.removeEventListener('fullscreenchange', handleFsChange);
       document.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('click', blockClick, true);
     };
   }, [zoomedSpread, isZoomMode]);
 
@@ -400,7 +398,7 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
         
         <div className={clsx(
           "w-full h-full max-w-full max-h-full flex justify-center items-center overflow-hidden transition-all duration-500",
-          zoomedSpread && "opacity-0 pointer-events-none scale-95" // 확대 중에는 배경을 안 보이게 하거나 클릭 방지
+          (zoomedSpread || isClosingZoom) && "opacity-0 pointer-events-none scale-95" // 닫히는 중에도 클릭 방지 유지
         )}>
           {/* @ts-expect-error - react-pageflip typings */}
           <HTMLFlipBook
@@ -450,8 +448,10 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
             onClick={(e) => {
               // 배경(검은 영역) 클릭 시 종료
               if (!isDragging) {
+                setIsClosingZoom(true);
                 setZoomedSpread(null);
                 setIsZoomMode(false);
+                setTimeout(() => setIsClosingZoom(false), 300);
               }
             }}
             onDoubleClick={(e) => e.stopPropagation()}
@@ -480,8 +480,10 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
                     e.stopPropagation();
                     // 이미지 영역 클릭 시 종료
                     if (!isDragging) {
+                      setIsClosingZoom(true);
                       setZoomedSpread(null);
                       setIsZoomMode(false);
+                      setTimeout(() => setIsClosingZoom(false), 300);
                     }
                   }}
                   style={{ 
