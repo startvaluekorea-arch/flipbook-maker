@@ -630,8 +630,8 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
       </div>
 
       {/* --- Bottom Navigation Control Panel (Fixed height) --- */}
-      <div className="flex-none w-full max-w-3xl mx-auto px-4 py-2 z-30">
-        <div className="flex flex-col gap-2 p-4 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl text-white">
+      <div className="flex-none w-full max-w-3xl mx-auto px-4 py-1 z-30">
+        <div className="flex flex-col gap-1 px-6 py-2 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl shadow-2xl text-white">
           {/* Slider */}
           <div className="w-full px-2">
             <input 
