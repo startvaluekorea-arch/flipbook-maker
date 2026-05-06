@@ -444,8 +444,8 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
             onMouseUp={(e) => {
               if ((e.target as HTMLElement).closest('.navigator-container')) return;
               const duration = Date.now() - mouseDownTime;
-              // 짧은 클릭(300ms 미만)이고 드래그 중이 아니면 즉시 종료
-              if (duration < 300 && !isDragging) {
+              // 1초 이내의 클릭이고 드래그 중이 아니면 즉시 종료
+              if (duration < 1000 && !isDragging) {
                 setTimeout(() => setZoomedSpread(null), 10);
               }
             }}
