@@ -111,7 +111,6 @@ export default function UploadDropzone() {
         context.fillStyle = '#ffffff';
         context.fillRect(0, 0, canvas.width, canvas.height);
 
-        // @ts-expect-error - pdfjs-dist typing
         const renderContext = {
           canvasContext: context,
           viewport: viewport,
@@ -119,7 +118,8 @@ export default function UploadDropzone() {
           background: 'rgb(255, 255, 255)', // Explicit white background for the renderer
         };
 
-        await page.render(renderContext).promise;
+        // @ts-expect-error - pdfjs-dist v5 types might require 'canvas' but 'canvasContext' works in browser
+        await page.render(renderContext as any).promise;
 
         // Convert to WebP
         const blob = await new Promise<Blob>((resolve) => {
