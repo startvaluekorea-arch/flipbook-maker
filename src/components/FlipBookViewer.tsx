@@ -224,11 +224,22 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
         else if (isZoomMode) setIsZoomMode(false);
       }
     };
+
+    // 확대 모드 중 배경 클릭 차단을 위한 캡처링 리스너 (강력한 차단)
+    const blockClick = (e: MouseEvent) => {
+      if (zoomedSpread) {
+        e.stopPropagation();
+      }
+    };
+
     document.addEventListener('fullscreenchange', handleFsChange);
     document.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('click', blockClick, true); // Capture phase
+
     return () => {
       document.removeEventListener('fullscreenchange', handleFsChange);
       document.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('click', blockClick, true);
     };
   }, [zoomedSpread, isZoomMode]);
 
@@ -437,9 +448,7 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
               isDragging ? "cursor-grabbing" : "cursor-zoom-minus"
             )}
             onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              // 드래그 중이 아닐 때만 종료 (onPanningStop의 지연 처리와 연동)
+              // 배경(검은 영역) 클릭 시 종료
               if (!isDragging) {
                 setZoomedSpread(null);
                 setIsZoomMode(false);
@@ -467,6 +476,14 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
               >
                 <div 
                   className="flex max-w-none shadow-2xl pointer-events-auto"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // 이미지 영역 클릭 시 종료
+                    if (!isDragging) {
+                      setZoomedSpread(null);
+                      setIsZoomMode(false);
+                    }
+                  }}
                   style={{ 
                     width: zoomedSpread[0].width * 4, 
                     height: zoomedSpread[0].height * 2 
