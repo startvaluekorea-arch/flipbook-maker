@@ -2,6 +2,7 @@
 
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import Link from 'next/link';
+import clsx from 'clsx';
 import HTMLFlipBook from 'react-pageflip';
 import { 
   ChevronLeft, 
