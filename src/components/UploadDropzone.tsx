@@ -103,20 +103,23 @@ export default function UploadDropzone() {
 
         // Render to Canvas
         const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d')!;
+        const context = canvas.getContext('2d', { alpha: false })!; // Optimize for opaque background
         canvas.width = viewport.width;
         canvas.height = viewport.height;
 
-        // Fill background with white to prevent transparency issues
+        // Fill background with white
         context.fillStyle = '#ffffff';
         context.fillRect(0, 0, canvas.width, canvas.height);
 
-        // @ts-expect-error - pdfjs-dist typing requires canvas but canvasContext works
-        await page.render({
+        // @ts-expect-error - pdfjs-dist typing
+        const renderContext = {
           canvasContext: context,
           viewport: viewport,
-          intent: 'print', // Use print intent to ensure all elements are rendered
-        }).promise;
+          intent: 'display', // Back to display intent
+          background: 'rgb(255, 255, 255)', // Explicit white background for the renderer
+        };
+
+        await page.render(renderContext).promise;
 
         // Convert to WebP
         const blob = await new Promise<Blob>((resolve) => {
