@@ -115,8 +115,9 @@ Page.displayName = 'Page';
 
 // --- Navigator (Minimap) Component ---
 const Navigator = ({ imagePath, imageSize }: { imagePath: string[]; imageSize: { width: number; height: number } }) => {
-  const { state } = useTransformContext();
+  const { state, setTransform } = useTransformContext();
   const { scale, positionX, positionY } = state;
+  const navRef = useRef<HTMLDivElement>(null);
   
   // 내비게이터 고정 너비 (펼침면이므로 더 넓게 280px)
   const navWidth = 280; 
@@ -127,26 +128,55 @@ const Navigator = ({ imagePath, imageSize }: { imagePath: string[]; imageSize: {
   const viewWidth = (window.innerWidth / (imageSize.width * scale)) * navWidth;
   const viewHeight = (window.innerHeight / (imageSize.height * scale)) * navHeight;
   
-  // 패닝 위치에 따른 상자 위치 계산 (이미지 중심 기준 오프셋 보정 필요할 수 있음)
+  // 패닝 위치에 따른 상자 위치 계산
   const x = (-positionX / (imageSize.width * scale)) * navWidth;
   const y = (-positionY / (imageSize.height * scale)) * navHeight;
 
+  // 내비게이터 클릭/드래그 시 메인 화면 이동 로직
+  const handleInteraction = (e: React.MouseEvent) => {
+    if (!navRef.current) return;
+    const rect = navRef.current.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    // 클릭한 지점이 빨간 상자의 중심이 되도록 타겟 위치 계산
+    const targetX = -((mouseX - viewWidth / 2) / navWidth) * (imageSize.width * scale);
+    const targetY = -((mouseY - viewHeight / 2) / navHeight) * (imageSize.height * scale);
+
+    setTransform(targetX, targetY, scale, 0);
+  };
+
+  const onMouseDown = (e: React.MouseEvent) => {
+    handleInteraction(e);
+    const moveHandler = (moveEvent: MouseEvent) => {
+      handleInteraction(moveEvent as unknown as React.MouseEvent);
+    };
+    const upHandler = () => {
+      window.removeEventListener('mousemove', moveHandler);
+      window.removeEventListener('mouseup', upHandler);
+    };
+    window.addEventListener('mousemove', moveHandler);
+    window.addEventListener('mouseup', upHandler);
+  };
+
   return (
     <div 
-      className="absolute top-24 left-6 z-[100] border-2 border-white/30 rounded-xl overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.5)] bg-zinc-900/80 backdrop-blur-xl animate-in fade-in slide-in-from-left-4 duration-500" 
+      ref={navRef}
+      className="absolute top-24 left-6 z-[100] border-2 border-white/30 rounded-xl overflow-hidden shadow-[0_0_40px_rgba(0,0,0,0.5)] bg-zinc-900/80 backdrop-blur-xl animate-in fade-in slide-in-from-left-4 duration-500 cursor-crosshair" 
       style={{ width: navWidth, height: navHeight }}
+      onMouseDown={onMouseDown}
     >
-      <div className="absolute top-0 left-0 w-full px-3 py-1.5 bg-black/40 border-b border-white/10 z-10 flex items-center justify-between">
+      <div className="absolute top-0 left-0 w-full px-3 py-1.5 bg-black/40 border-b border-white/10 z-10 flex items-center justify-between pointer-events-none">
         <span className="text-[10px] font-bold text-white/50 tracking-widest uppercase">Navigator</span>
         <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
       </div>
-      <div className="w-full h-full flex">
+      <div className="w-full h-full flex pointer-events-none">
         {imagePath.map((path, idx) => (
           <img key={idx} src={path} className="h-full object-cover opacity-60 flex-1" alt="Minimap" />
         ))}
       </div>
       <div 
-        className="absolute border-2 border-red-500 bg-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.5)] transition-all duration-75"
+        className="absolute border-2 border-red-500 bg-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.5)] transition-all duration-75 pointer-events-none"
         style={{
           width: Math.min(viewWidth, navWidth),
           height: Math.min(viewHeight, navHeight),
@@ -402,6 +432,7 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
               maxScale={6}
               centerOnInit={true}
               wheel={{ step: 0.2 }}
+              limitToBounds={false} // 패닝 범위를 더 자유롭게 설정
               onPanningStart={() => setIsDragging(true)}
               onPanningStop={() => setTimeout(() => setIsDragging(false), 100)}
             >
