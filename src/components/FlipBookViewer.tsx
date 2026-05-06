@@ -507,7 +507,7 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
             onDoubleClick={(e) => e.stopPropagation()}
           >
             <TransformWrapper
-              initialScale={1.5}
+              initialScale={1}
               minScale={1}
               maxScale={6}
               centerOnInit={true}
