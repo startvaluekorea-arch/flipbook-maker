@@ -115,7 +115,8 @@ Page.displayName = 'Page';
 
 // --- Navigator (Minimap) Component ---
 const Navigator = ({ imagePath, imageSize }: { imagePath: string[]; imageSize: { width: number; height: number } }) => {
-  const { state, setTransform } = useTransformContext();
+  const context = useTransformContext() as any;
+  const { state, setTransform } = context;
   const { scale, positionX, positionY } = state;
   const navRef = useRef<HTMLDivElement>(null);
   
