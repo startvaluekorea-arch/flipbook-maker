@@ -522,7 +522,7 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
             >
               <TransformComponent 
                 wrapperClass="!w-screen !h-screen !bg-transparent" 
-                contentClass="!w-screen !h-screen flex items-center justify-center !bg-transparent"
+                contentClass="pointer-events-auto"
               >
                 <div 
                   className="flex max-w-none shadow-2xl pointer-events-auto"
@@ -552,8 +552,8 @@ export default function FlipBookViewer({ metadata }: FlipBookViewerProps) {
                     height: zoomedSpread[0].height * 2 
                   }}
                 >
-                  <img src={zoomedSpread[0].imagePath} className="h-full object-contain pointer-events-none" alt="Left" />
-                  <img src={zoomedSpread[1].imagePath} className="h-full object-contain pointer-events-none" alt="Right" />
+                  <img src={zoomedSpread[0].imagePath} className="w-1/2 h-full object-cover pointer-events-none" alt="Left" />
+                  <img src={zoomedSpread[1].imagePath} className="w-1/2 h-full object-cover pointer-events-none" alt="Right" />
                 </div>
               </TransformComponent>
               <div className="navigator-container">
